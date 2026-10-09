@@ -70,6 +70,28 @@ if (tg) {
 }
 const haptic = (kind, v) => { try { tg && tg.HapticFeedback && tg.HapticFeedback[kind](v); } catch (e) {} };
 
+/* ====== PONTUACOES (servidor do Corvo) ====== */
+const API = 'https://rxbot-production-0047.up.railway.app';
+function reportScore(sc) {
+  if (!tg || !tg.initData) return;
+  const antigo = document.getElementById('rank');
+  if (antigo) antigo.textContent = '…';
+  fetch(API + '/jogo/score', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ initData: tg.initData, score: sc }) })
+    .then(r => r.json()).then(showRank).catch(() => {});
+}
+function showRank(d) {
+  if (!d || !d.ok) return;
+  let el = document.getElementById('rank');
+  if (!el) {
+    el = document.createElement('div'); el.id = 'rank';
+    el.style.cssText = 'margin-top:12px;font-size:13px;line-height:1.6;color:#d8c9ff;text-align:center;white-space:pre-line';
+    overEl.appendChild(el);
+  }
+  const med = ['🥇', '🥈', '🥉'];
+  el.textContent = (d.chat ? 'Ranking do grupo' : 'Ranking') + ' · és o #' + d.rank + ' de ' + d.players + '\n' +
+    d.top.map((x, i) => (med[i] || (i + 1) + '.') + ' ' + x[0] + ' — ' + x[1]).join('\n');
+}
+
 /* ====== ARMAZENAMENTO (recorde) ====== */
 function lsGet(k) { try { return parseInt(localStorage.getItem(k)) || 0; } catch (e) { return 0; } }
 function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
@@ -165,6 +187,7 @@ function die() {
   beep(220, .35, 'sawtooth', .07, -160);
   haptic('notificationOccurred', 'error');
   if (score > best) { best = score; newBest = true; saveBest(best); }
+  reportScore(score);
   setTimeout(() => {
     document.getElementById('sc').textContent = score;
     document.getElementById('bs').textContent = best + (newBest ? ' ★' : '');
