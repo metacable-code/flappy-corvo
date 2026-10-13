@@ -44,7 +44,7 @@
   #pick { top:2%; transform:translate(-50%,0); padding:14px 10px 12px; }
   #pick h2 { font-size:22px; margin-bottom:4px; }
   .plabel { margin:8px 0 4px; font-size:13px; letter-spacing:1px; text-transform:uppercase; color:var(--gold); text-align:left; padding-left:2px; }
-  .grid { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
+  .grid { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; max-height:332px; overflow-y:auto; touch-action:pan-y; overscroll-behavior:contain; padding-right:2px; }
   .card { border:2px solid rgba(255,255,255,.12); border-radius:10px; padding:2px 2px 3px; background:rgba(255,255,255,.04); cursor:pointer; }
   .card canvas { position:static; inset:auto; width:100%; height:auto; aspect-ratio:120/92; display:block; }
   .card span { display:block; font-size:11px; margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -61,8 +61,8 @@
   .card .pr { position:absolute; top:2px; right:2px; font-style:normal; font-size:10px; font-weight:bold; color:#ffd25a; background:rgba(10,6,24,.82); border-radius:8px; padding:1px 4px; }
   .card .pr:empty { display:none; }
   .card.lock canvas { filter:brightness(.45) grayscale(.5); }
-  #pick h2 { display:flex; justify-content:space-between; align-items:baseline; font-size:20px; padding:0 40px 0 4px; }
-  .wal { font-size:16px; color:#ffd25a; font-weight:bold; letter-spacing:0; }
+  #pick h2 { display:flex; justify-content:space-between; align-items:baseline; font-size:18px; white-space:nowrap; padding:0 42px 0 4px; }
+  .wal { font-size:15px; color:#ffd25a; font-weight:bold; letter-spacing:0; }
   #buy { background:#ffd25a; color:#1a1030; font-weight:bold; }
   #buy.poor { background:rgba(255,255,255,.12); color:#efe9ff; border:1px solid rgba(255,255,255,.25); font-weight:normal; }
   .hidden { display:none; }
@@ -236,7 +236,18 @@ const CRY = {
   arara: [
     { at: 0, d: .35, f0: 1500, f1: 900, lf: 50, ld: 200, b0: 2000, b1: 1200, q: 2.5 },
     { at: .4, d: .3, f0: 1300, f1: 800, lf: 50, ld: 200, b0: 2000, b1: 1200, q: 2.5 },
-    { at: .8, d: .4, f0: 1600, f1: 900, lf: 50, ld: 200, b0: 2000, b1: 1200, q: 2.5 }]
+    { at: .8, d: .4, f0: 1600, f1: 900, lf: 50, ld: 200, b0: 2000, b1: 1200, q: 2.5 }],
+  gaivota: [0, .22, .44, .66].map((at, i) => ({ at, d: .2, f0: 2000 - i * 150, f1: 1300, lf: 40, ld: 150, b0: 2600, b1: 1700, q: 2.5, v: .55 })),
+  pelicano: [
+    { at: 0, d: .5, f0: 230, f1: 110, lf: 9, ld: 18, b0: 700, b1: 350, q: 2, v: .9 },
+    { at: .6, d: .55, f0: 210, f1: 90, lf: 9, ld: 18, b0: 650, b1: 320, q: 2, v: .9 }],
+  pavao: [
+    { at: 0, d: .5, f0: 700, f1: 1500, lf: 18, ld: 70, b0: 1200, b1: 2200, q: 3, v: .7 },
+    { at: .65, d: .5, f0: 750, f1: 1600, lf: 18, ld: 70, b0: 1200, b1: 2200, q: 3, v: .7 }],
+  ptero: [
+    { at: 0, d: .9, f0: 380, f1: 1900, lf: 55, ld: 160, b0: 1500, b1: 3200, q: 1.5, v: .8 },
+    { at: .05, d: .85, ty: 'square', f0: 260, f1: 1300, lf: 30, ld: 90, v: .25, b0: 900, b1: 2000, q: 1 },
+    { at: .9, d: .7, f0: 160, f1: 70, lf: 12, ld: 25, b0: 500, b1: 200, q: 1.5, v: .7 }]
 };
 function cry(id) {
   if (muted) return;
@@ -722,6 +733,50 @@ const CHARS = {
     rec: ['Recorde novo! Cá cá, sou a melhor!', '*Recorde novo, caralho! Repito: caralho!'],
     rd: ['Toca no ecrã, cá cá!', '*Toca no ecrã, caralho, cá cá!'],
     in: ['Cá cá! Sou a Arara. Falo por todos.', 'Olá! Sou a Arara. Repito tudo.']
+  },
+  gaivota: {
+    name: 'Gaivota', emoji: '🌊', bio: 'Ladra de batatas fritas e de tudo o que brilha.',
+    col: '#9fd3ff', pc: '#eef1f5', gl: [190, 220, 255, .24], pitch: 1.5, rate: 1.1, ps: .95, hs: .95, ts: 1, tox: -1, toy: 1,
+    d: ['Ai, o meu peixe!', 'Larguei a batata frita!', 'Isto foi o vento, juro!', 'Eu só queria o lanche!', 'Foi o farol que me enganou!', '*Foda-se, bati! Perdi o lanche, caralho!', '*Caralho, que merda de livros!', '*Puta que pariu, o meu peixe, porra!', '*Merda de livros, cá-cá!'],
+    t: ['Dá cá essa moeda, {p}! É minha!', 'Tudo o que brilha é meu, {p}!', 'Eu só vim roubar, não é nada pessoal.', 'Isso é peixe, {p}? Dá cá!', 'Cheira-me a batata frita! E a trocos!', '*Dá cá as moedas, {p}, caralho!', '*Foda-se, {p}, partilha o que apanhas, porra!', '*Vou-te cagar em cima, {p}, é só uma questão de tempo!'],
+    r: ['Larga-me, {h}, estou a apanhar moedas!', 'Deixa-me em paz, {h}!', 'Isso é meu, {h}!', '*{h}, vai-te foder, as moedas são minhas!', '*Foda-se, {h}, sai-me da frente!'],
+    p: ['{n}! Moedas a rodos!', '{n}! Só falta a batata frita!', '*{n}, caralho! Já dá para um peixe!', '*{n}! Toma, livros de merda!'],
+    rec: ['Recorde novo! Hoje há peixe!', '*Recorde novo, caralho! Isto é que é roubar bem!'],
+    rd: ['Toca no ecrã, que eu tenho fome!', '*Toca no ecrã, caralho, há moedas à espera!'],
+    in: ['Olá! Sou a Gaivota. Não me mexas nas batatas fritas.', 'Sou a Gaivota. Cuidado com as tuas moedas.']
+  },
+  pelicano: {
+    name: 'Pelicano', emoji: '🐟', bio: 'Bico gigante, papo ainda maior e pouca vergonha.',
+    col: '#f2b24a', pc: '#e9edf2', gl: [242, 178, 74, .24], pitch: .7, rate: .9, ps: .85, hs: .9, ts: .85, tox: -7, toy: 1,
+    d: ['O meu papo! Ai, o meu papo!', 'Isto não cabia no bico!', 'Engoli em seco... e livros!', 'Eu só queria peixe, juro!', 'Fui à vida, mas voltei de bico!', '*Foda-se, bati com o bico, caralho!', '*Caralho, que dor no papo, porra!', '*Merda de livros no bico, foda-se!'],
+    t: ['Cabe tudo no meu bico, {p}, até tu!', 'Tenho um papo enorme e uma fome maior!', 'Passa para cá as moedas, {p}, eu guardo!', 'Estou à espera do peixe, {p}, e do teu azar!', 'Cuidado, {p}, que eu mergulho!', '*Vou-te engolir, {p}, caralho!', '*Foda-se, {p}, voas pior que um peixe, porra!', '*Cala-te e voa, {p}, que me dá fome, caralho!'],
+    r: ['Sai-me da frente, {h}, tenho o bico cheio!', 'Cala-te, {h}, estou a trabalhar!', '*{h}, vai-te foder, o bico é meu!', '*Foda-se, {h}, não me chateies!'],
+    p: ['{n}! O papo está cheio!', '{n}! Cabe tudo!', '*{n}, caralho! Que bico!', '*{n}! Toma, livros do caralho!'],
+    rec: ['Recorde novo! O papo transborda!', '*Recorde novo, caralho! Isto enche o papo!'],
+    rd: ['Toca no ecrã, o papo está vazio!', '*Toca no ecrã, caralho, tenho fome!'],
+    in: ['Sou o Pelicano. O meu bico tem muito espaço.', 'Olá! Sou o Pelicano. O bico é só para peixe. Mais ou menos.']
+  },
+  pavao: {
+    name: 'Pavão', emoji: '🦚', bio: 'Lindo, vaidoso e ninguém lhe diz que não.',
+    col: '#35c9a8', pc: '#1e8f6a', gl: [53, 201, 168, .26], pitch: 1.3, rate: 1, ps: .85, hs: .85, ts: .8, tox: 10, toy: 8,
+    d: ['A minha cauda! Estragaram-me o penteado!', 'Isto não combina comigo!', 'Quem me empurrou? Eu sou lindo!', 'Ai, as penas todas!', 'Logo eu, o mais bonito!', '*Foda-se, bati! Com a minha cara, caralho!', '*Caralho, a cauda, porra!', '*Puta que pariu, estraguei o penteado!'],
+    t: ['Olha para mim, {p}! Sou lindo!', 'Isto é que é cauda, {p}, não essa miséria!', 'Eu nasci para brilhar, tu nasceste para cair!', 'Vê lá se não me estragas as penas, {p}!', 'Mia, mia! Admira-me!', '*Voas pior que feio, {p}, caralho!', '*Foda-se, {p}, eu sou lindo e tu és um desastre!', '*Cala-te, {p}, estás a estragar-me o ângulo, porra!'],
+    r: ['Não me estragues o penteado, {h}!', 'Sai da frente, {h}, estou a posar!', '*{h}, vai-te foder, estou a posar!', '*Foda-se, {h}, eu sou muito mais bonito!'],
+    p: ['{n}! Como é costume, fantástico!', '{n}! Devia haver aplausos!', '*{n}, caralho! Lindo e vencedor!', '*{n}! Toma, livros de merda!'],
+    rec: ['Recorde novo! Claro, sou eu!', '*Recorde novo, caralho! Lindo e campeão!'],
+    rd: ['Toca no ecrã, o espetáculo vai começar!', '*Toca no ecrã, caralho, estou pronto!'],
+    in: ['Sou o Pavão. Podes admirar à vontade.', 'Olá! Sou o Pavão. Sim, a cauda é mesmo minha.']
+  },
+  ptero: {
+    name: 'Pterodáctilo', emoji: '🦖', bio: 'Do tempo dos dinossauros. Parte livros como palitos.',
+    col: '#e0803a', pc: '#c98a52', gl: [224, 128, 58, .28], pitch: .5, rate: .9, ps: .8, hs: .95, ts: .78, tox: 0, toy: 2,
+    d: ['Os livros ganharam desta vez!', 'Já levei com um meteoro, isto não é nada!', 'Extinto outra vez!', 'Os dinossauros caem sempre!', 'Eu mandava isto tudo abaixo... e falhei!', '*Foda-se, bati! Eu devia ser invencível, caralho!', '*Caralho, a minha cabeça, porra!', '*Puta que pariu, nem os livros me respeitam!'],
+    t: ['Eu sobrevivi a um meteoro, {p}! Tu não sobrevives a livros!', 'Sou o rei do céu, {p}!', 'Cuidado, {p}! Eu parto livros como palitos!', 'Os meus antepassados dominaram isto, {p}!', 'Já fui extinto, {p}. Tu és só amador.', '*Esmago-te, {p}, caralho!', '*Foda-se, {p}, voas pior que um ovo, porra!', '*Vou-te comer, {p}, ainda hoje, caralho!'],
+    r: ['Sai da frente, {h}, ou como-te!', 'Cala-te, {h}, sou do tempo dos dinossauros!', '*{h}, vai-te foder, sou o rei do céu!', '*Foda-se, {h}, eu parto-te ao meio!'],
+    p: ['{n}! Rugido de vitória!', '{n}! Extinto? Nunca!', '*{n}, caralho! Esmaguei isto tudo!', '*{n}! Toma, livros do caralho!'],
+    rec: ['Recorde novo! Rei do céu!', '*Recorde novo, caralho! Os dinossauros não morrem!'],
+    rd: ['Toca no ecrã, vamos esmagar livros!', '*Toca no ecrã, caralho, vamos partir isto tudo!'],
+    in: ['Sou o Pterodáctilo. Quase um dinossauro. Quase.', 'Rooaar! Sou o Pterodáctilo. Os livros que se cuidem.']
   }
 };
 
@@ -871,7 +926,73 @@ DRAW.arara = function (c, w, m) {
   aw(1, '#2574d6');
 };
 
-const ORDER = ['corvo', 'ju', 'aguia', 'liberdade', 'dragao', 'fenix', 'pomba', 'morcego', 'conde', 'pato', 'mocho', 'abutre', 'tucano', 'picapau', 'dodo', 'arara'];
+DRAW.gaivota = function (c, w, m) {
+  const wy = w * 14;
+  c.strokeStyle = '#e8823a'; c.lineWidth = 2; c.beginPath(); c.moveTo(-3, 9); c.lineTo(-5, 15); c.moveTo(3, 9.5); c.lineTo(2, 15.5); c.stroke();
+  c.fillStyle = '#eef1f5'; c.strokeStyle = '#8a97a8'; c.lineWidth = 1.2; poly(c, [-12, -3, -27, -4, -27, 4, -12, 5]); fs(c);
+  featherWing(c, wy, .85, '#aab6c4', '#5f6e82');
+  c.fillStyle = '#f7f9fb'; c.strokeStyle = '#8a97a8'; c.lineWidth = 1.4; ell(c, 0, 0, 16, 10.5); fs(c);
+  c.beginPath(); c.arc(13, -6, 8, 0, TAU); fs(c);
+  c.fillStyle = '#f4c430'; c.strokeStyle = '#a87c10'; c.lineWidth = 1.1;
+  c.beginPath(); c.moveTo(18.5, -9.5); c.quadraticCurveTo(29, -9, 30.5, -4); c.lineTo(27, -3.5); c.quadraticCurveTo(24, -5.5, 18.5, -5); c.closePath(); fs(c);
+  c.fillStyle = '#e0a820'; poly(c, [18.5, -5, 26.5, -3.6 + m * 1, 24.5, -.6 + m * 5.5, 18.5, -1.8]); fs(c);
+  dot(c, 28.4, -5.2, 1.2, '#d63a2a');
+  dot(c, 15.6, -8, 2.3, '#fff'); dot(c, 16.1, -8, 1.2, '#000');
+  featherWing(c, wy, 1, '#c8d1dc', '#5f6e82');
+  c.fillStyle = '#2a2f3a'; poly(c, [-29, wy * 1.25 - 3, -33, wy * 1.3 - 4, -32, wy + 8, -26, wy * 1.1 + 4]); c.fill();
+};
+DRAW.pelicano = function (c, w, m) {
+  const wy = w * 12;
+  c.fillStyle = '#d9dee6'; c.strokeStyle = '#8791a1'; c.lineWidth = 1.2; poly(c, [-12, -2, -26, 0, -12, 5]); fs(c);
+  featherWing(c, wy, .9, '#aeb8c6', '#5d6a7e');
+  c.fillStyle = '#f1f3f6'; c.strokeStyle = '#8791a1'; c.lineWidth = 1.4; ell(c, 0, 1, 17, 11.5); fs(c);
+  c.beginPath(); c.arc(13, -6, 7.6, 0, TAU); fs(c);
+  // bico enorme com papo
+  c.fillStyle = '#f2b24a'; c.strokeStyle = '#9a6a14'; c.lineWidth = 1.2;
+  c.beginPath(); c.moveTo(18.5, -4.5); c.quadraticCurveTo(28, 9 + m * 5, 41, -3); c.lineTo(19, -4.2); c.closePath(); fs(c);
+  c.fillStyle = '#e8c27a'; poly(c, [18.5, -9, 42, -5.2 - m * 1.5, 41.5, -3, 18.5, -4.6]); fs(c);
+  dot(c, 41, -4.6, 1.4, '#c24a2a');
+  dot(c, 15.5, -8, 2.2, '#fff'); dot(c, 16, -8, 1.1, '#000');
+  featherWing(c, wy, 1.1, '#dfe4ec', '#5d6a7e');
+  c.fillStyle = '#2f3644'; poly(c, [-33, wy * 1.45 - 4, -36, wy * 1.45 - 5, -35, wy * 1.1 + 9, -29, wy * 1.2 + 5]); c.fill();
+};
+DRAW.pavao = function (c, w, m, tt) {
+  const wy = w * 12;
+  for (let i = 0; i < 7; i++) {
+    const a = Math.PI + (i - 3) * 0.25 + Math.sin(tt * .08 + i) * .03, L = 38 + (i % 2) * 5;
+    const ex = -8 + Math.cos(a) * L, ey = 3 + Math.sin(a) * L;
+    c.strokeStyle = '#2a7a4a'; c.lineWidth = 1.6; c.beginPath(); c.moveTo(-8, 3); c.lineTo(ex, ey); c.stroke();
+    c.fillStyle = '#1e8f6a'; c.strokeStyle = '#0d4a3a'; c.lineWidth = 1; ell(c, ex, ey, 8.5, 6.5, a); fs(c);
+    c.fillStyle = '#1b4fa8'; ell(c, ex, ey, 5.2, 4.2, a); c.fill();
+    c.fillStyle = '#e8c23a'; ell(c, ex - Math.cos(a) * .5, ey - Math.sin(a) * .5, 2.8, 2.2, a); c.fill();
+    dot(c, ex, ey, 1.1, '#0b2a4a');
+  }
+  c.fillStyle = '#1f5fa8'; c.strokeStyle = '#0d2f5a'; c.lineWidth = 1.4; ell(c, 0, 1, 14.5, 9.5); fs(c);
+  c.strokeStyle = '#1b4fa8'; c.lineWidth = 7; c.beginPath(); c.moveTo(8, -3); c.quadraticCurveTo(14, -6, 15, -13); c.stroke();
+  c.fillStyle = '#1b4fa8'; c.strokeStyle = '#0d2f5a'; c.lineWidth = 1.2; c.beginPath(); c.arc(16, -15, 5.4, 0, TAU); fs(c);
+  c.strokeStyle = '#0d2f5a'; c.lineWidth = 1.2; c.beginPath(); c.moveTo(14, -19); c.lineTo(11, -28); c.moveTo(16, -20); c.lineTo(16, -30); c.moveTo(18, -19); c.lineTo(21, -28); c.stroke();
+  dot(c, 11, -28, 1.7, '#35c9a8'); dot(c, 16, -30, 1.7, '#35c9a8'); dot(c, 21, -28, 1.7, '#35c9a8');
+  c.fillStyle = '#f4f1ea'; ell(c, 17.5, -14.5, 3.4, 2.3); c.fill();
+  c.fillStyle = '#9a9aa4'; c.strokeStyle = '#4e4e58'; c.lineWidth = 1; poly(c, [20, -15.5, 27.5, -13.2 + m * 1, 20, -11.8 + m * 2]); fs(c);
+  dot(c, 18, -15.5, 1.5, '#000');
+  featherWing(c, wy, .95, '#2a9d8f', '#0d4a3a');
+};
+DRAW.ptero = function (c, w, m) {
+  const wy = w * 14;
+  c.fillStyle = '#8c5a3a'; c.strokeStyle = '#4a2c18'; c.lineWidth = 1.2; poly(c, [-10, 2, -24, 8, -21, 11, -9, 7]); fs(c);
+  membrane(c, wy, 1.15, '#b97a45', '#4a2c18', '#4a2c18');
+  c.fillStyle = '#a0643c'; c.strokeStyle = '#4a2c18'; c.lineWidth = 1.4; ell(c, 0, 0, 14, 9); fs(c);
+  c.fillStyle = '#d9a46a'; ell(c, 2, 4, 9, 4.5); c.fill();
+  c.fillStyle = '#a0643c'; c.beginPath(); c.arc(13, -5, 6.8, 0, TAU); fs(c);
+  c.fillStyle = '#d13b2a'; c.strokeStyle = '#6a1a10'; c.lineWidth = 1.2; poly(c, [9, -9, -6, -18, -2, -12, -8, -9, 8, -3]); fs(c);
+  c.fillStyle = '#e0b070'; c.strokeStyle = '#7a5528'; c.lineWidth = 1.2; poly(c, [17, -8, 41, -4.4 - m * 1.5, 41, -3.2, 17, -3.2]); fs(c);
+  c.fillStyle = '#c99a58'; poly(c, [17, -3.2, 38, -3.2 + m * 5, 17, -.4]); fs(c);
+  c.fillStyle = '#fff'; for (let i = 0; i < 4; i++) poly(c, [24 + i * 3.6, -3.4 + m * (i * .9), 25.2 + i * 3.6, -1 + m * (i * .9 + 2), 26.4 + i * 3.6, -3.4 + m * (i * .9)]), c.fill();
+  dot(c, 15.5, -7.4, 2.4, '#ffcb47'); dot(c, 15.9, -7.4, 1.1, '#000');
+  membrane(c, wy, 1.3, '#d89a5c', '#4a2c18', '#4a2c18');
+};
+
+const ORDER = ['corvo', 'ju', 'aguia', 'liberdade', 'dragao', 'fenix', 'pomba', 'morcego', 'conde', 'pato', 'mocho', 'abutre', 'tucano', 'picapau', 'dodo', 'arara', 'gaivota', 'pelicano', 'pavao', 'ptero'];
 for (const id of ORDER) { CHARS[id].id = id; CHARS[id].draw = DRAW[id]; }
 
 function drawChar(c, id, x, y, o) {
@@ -901,7 +1022,7 @@ let hSel = lsGetS('corvo_h');                       // 'rand' (sorteia em cada v
 if (hSel !== 'rand' && (!CHARS[hSel] || hSel === sel.p)) hSel = 'rand';
 
 /* ====== PREÇOS (quanto mais valioso o pássaro, mais caro) ====== */
-const PRICE = { corvo: 0, pomba: 30, pato: 55, mocho: 80, picapau: 110, tucano: 140, morcego: 170, abutre: 220, ju: 280, conde: 350, arara: 450, aguia: 600, dragao: 600, fenix: 900, liberdade: 1200, dodo: 2000 };
+const PRICE = { corvo: 0, pomba: 30, pato: 55, mocho: 80, picapau: 110, tucano: 140, morcego: 170, abutre: 220, ju: 280, conde: 350, arara: 450, aguia: 600, dragao: 600, fenix: 900, liberdade: 1200, dodo: 2000, gaivota: 250, pelicano: 800, pavao: 3000, ptero: 5000 };
 const hadWallet = walLoad(() => { if (typeof refreshWallet === 'function') refreshWallet(); });
 if (!hadWallet) { [sel.p, hSel].forEach(i => { if (CHARS[i] && !WAL.o.includes(i)) WAL.o.push(i); }); walSave(false); } // quem já jogava mantém os seus
 const owns = id => WAL.o.includes(id);
@@ -1067,11 +1188,15 @@ const TRAITS = {
   tucano:  { gapPlus: 12, t: 'Bico guia: os vãos entre as torres são mais largos.', sp: 'Fruta: fruta a rebentar no ecrã e a tapar-te a vista.' },
   picapau: { pw: 0.78, t: 'Bicador: as torres de livros são mais estreitas para ti.', sp: 'Toc toc: marteladas, rachas no ecrã e tremores.' },
   dodo:    { revive: 2, hr: 16, t: 'Gorducho: caixa de colisão maior, mas renasce duas vezes.', sp: 'Passeio: o dodo atravessa o ecrã a tapar-te tudo.' },
+  gaivota: { magnet: 48, t: 'Ladra: as moedas vêm ter contigo de mais perto.', sp: 'Roubo: uma gaivota varre o ecrã e leva as moedas.' },
+  pelicano: { magnet: 92, t: 'Papo: apanha moedas e diamantes de longe.', sp: 'Mergulho: um pelicano enorme mergulha e tapa-te o ecrã.' },
+  pavao:   { coinX: 2, t: 'Vaidoso: cada moeda vale o dobro.', sp: 'Leque: abre a cauda com olhos e cobre-te o ecrã.' },
+  ptero:   { smash: 3, hr: 14, t: 'Esmagador: em vez de morrer, destrói 3 pilhas de livros.', sp: 'Rugido: o ecrã treme e chovem livros.' },
   arara:   { t: 'Papagaio: copia a característica de quem te atrapalha!', sp: 'Penas coloridas: chuva de penas e gritos.' },
   conde:   { calm: 2, t: 'Hipnose: quem te atrapalha faz tudo metade das vezes.', sp: 'Capa: cobre-te o ecrã por instantes.' }
 };
-const PT = () => sel.p === 'arara' ? Object.assign({}, TRAITS[sel.h] || {}, { copy: 1 }) : TRAITS[sel.p];
-let invulnUntil = 0, revived = 0, shieldUsed = false;
+const PT = () => sel.p === 'arara' ? Object.assign({}, TRAITS[sel.h] || {}, { copy: 1, coinX: 1 }) : TRAITS[sel.p];
+let invulnUntil = 0, revived = 0, shieldUsed = false, smashLeft = 0, debris = [];
 
 /* ====== DIFICULDADES ====== */
 const MODES = {
@@ -1186,10 +1311,26 @@ function spawnCoins(a, b) {
   else { [0.26, 0.42, 0.58, 0.74].forEach((f, i) => add(f, i % 2 ? 24 : -24)); }
   if (Math.random() < 0.28) coins.push({ x: x0 + d * 0.5, y: Math.random() < 0.5 ? 62 + Math.random() * 40 : hi - Math.random() * 40, v: 5, ph: Math.random() * 6 });
 }
+function smashPipe(p) {
+  p.broken = true; shake = Math.max(shake, 12);
+  for (let i = 0; i < 26; i++) {
+    const top = i % 2 === 0;
+    debris.push({ x: p.x + 8 + Math.random() * (PW - 16), y: top ? p.gapY - p.gap / 2 - Math.random() * 120 : p.gapY + p.gap / 2 + Math.random() * 120, vx: -1 + Math.random() * 5, vy: -6 + Math.random() * 5, rot: Math.random() * 6, vr: (Math.random() - .5) * .4, c: PALETTE[(Math.random() * PALETTE.length) | 0], life: 1 });
+  }
+  cry('ptero'); haptic('notificationOccurred', 'success');
+  FX.banner = { text: '🦖 CRASH! ' + (smashLeft ? smashLeft + (smashLeft === 1 ? ' pilha restante' : ' pilhas restantes') : 'Última pilha!'), until: performance.now() + 1600 };
+}
 function takeCoin(c) {
-  runCoins += c.v; WAL.c += c.v; walSave(false);
-  pops.push({ x: c.x, y: c.y, txt: '+' + c.v, life: 1, c: c.v > 1 ? '#7ff0ff' : '#ffd25a' });
+  const v = c.v * (PT().coinX || 1);
+  runCoins += v; WAL.c += v; walSave(false);
+  pops.push({ x: c.x, y: c.y, txt: '+' + v, life: 1, c: c.v > 1 ? '#7ff0ff' : '#ffd25a' });
   beep(c.v > 1 ? 1500 : 1150, .07, 'square', .04, c.v > 1 ? 2300 : 1800); haptic('impactOccurred', 'light');
+}
+function drawDebris() {
+  for (const d of debris) {
+    ctx.save(); ctx.globalAlpha = Math.max(0, d.life); ctx.translate(d.x, d.y); ctx.rotate(d.rot);
+    ctx.fillStyle = d.c; ctx.fillRect(-10, -4, 20, 8); ctx.fillStyle = 'rgba(217,164,65,.8)'; ctx.fillRect(-6, -1, 12, 2); ctx.restore();
+  }
 }
 function drawCoinIcon(x, y, r) {
   ctx.fillStyle = '#ffd25a'; ctx.strokeStyle = '#b57a10'; ctx.lineWidth = 2;
@@ -1219,7 +1360,7 @@ function drawCoins() {
 }
 
 function resetGame() {
-  score = 0; pipes = []; feathers = []; coins = []; pops = []; runCoins = 0; scroll = 0; newBest = false; resetFx();
+  score = 0; pipes = []; feathers = []; coins = []; pops = []; debris = []; runCoins = 0; scroll = 0; newBest = false; resetFx();
   bird.y = 330; bird.vy = 0; bird.rot = 0; bird.wing = 0;
 }
 function showReady() {
@@ -1238,7 +1379,7 @@ function showReady() {
   say('h', rnd(pool(sel.h, 'in')), 5000, false);
 }
 function startGame() {
-  state = 'playing'; readyEl.classList.add('hidden'); bird.vy = -(PT().flap || 7.4) + 0.2; playStart = performance.now(); bird.r = PT().hr || 13; invulnUntil = 0; revived = 0; shieldUsed = false;
+  state = 'playing'; readyEl.classList.add('hidden'); bird.vy = -(PT().flap || 7.4) + 0.2; playStart = performance.now(); bird.r = PT().hr || 13; invulnUntil = 0; revived = 0; shieldUsed = false; smashLeft = PT().smash || 0; debris = [];
   const nowT = performance.now();
   setMode(pickMode()); lastMode = cur;
   FX.nextFlash = nowT + 2500; FX.nextMeteor = nowT + 2500; FX.gust.state = 0; FX.gust.next = nowT + 3500;
@@ -1513,7 +1654,11 @@ function update(dt) {
       const np = makePipe(), pr = pipes[pipes.length - 1];
       pipes.push(np); if (pr) spawnCoins(pr, np);
     }
-    for (const c of coins) c.x -= speed * dt;
+    const mg = PT().magnet || 0;
+    for (const c of coins) {
+      c.x -= speed * dt;
+      if (mg) { const dx = bird.x - c.x, dy = bird.y - c.y, d = Math.hypot(dx, dy); if (d < mg && d > 1) { const k = (Math.min(1, (mg - d) / mg) * 4 + 1.5) * dt; c.x += dx / d * k; c.y += dy / d * k; } }
+    }
     for (const p of pipes) {
       p.x -= speed * dt;
       if (p.amp) p.gapY = p.g0 + Math.sin(t * 0.035 + p.ph) * p.amp;
@@ -1528,9 +1673,13 @@ function update(dt) {
     const r = bird.r - 2;
     if (bird.y + r >= H - GROUND) { bird.y = H - GROUND - r; die('ground'); }
     for (const p of pipes) {
+      if (p.broken) continue;
       const pi = PW * (1 - (PT().pw || 1)) / 2;
       if (bird.x + r > p.x + pi && bird.x - r < p.x + PW - pi &&
-          (bird.y - r < p.gapY - p.gap / 2 || bird.y + r > p.gapY + p.gap / 2)) { die('pipe'); break; }
+          (bird.y - r < p.gapY - p.gap / 2 || bird.y + r > p.gapY + p.gap / 2)) {
+        if (smashLeft > 0 && performance.now() >= invulnUntil) { smashLeft--; smashPipe(p); continue; }
+        die('pipe'); break;
+      }
     }
     if (state === 'playing') {
       coins = coins.filter(c => {
@@ -1548,6 +1697,8 @@ function update(dt) {
 
   for (const f of feathers) { f.x += f.vx * dt; f.y += f.vy * dt; f.vy += 0.18 * dt; f.vx *= 0.985; f.life -= 0.012 * dt; f.rot += 0.1 * dt; }
   feathers = feathers.filter(f => f.life > 0);
+  for (const d of debris) { d.x += d.vx * dt; d.y += d.vy * dt; d.vy += 0.5 * dt; d.rot += d.vr * dt; d.life -= 0.012 * dt; }
+  debris = debris.filter(d => d.life > 0 && d.y < H);
   for (const p of pops) { p.y -= 0.9 * dt; p.life -= 0.03 * dt; }
   pops = pops.filter(p => p.life > 0);
   if (shake > 0) shake = Math.max(0, shake - 0.6 * dt);
@@ -1752,7 +1903,7 @@ function drawWarning() {
 
 
 /* ====== ESPECIAL DE QUEM ATRAPALHA (distrações com aviso sonoro) ====== */
-const SP_SAY = { tucano: 'Fruta para todos!', picapau: 'Toc toc toc!', dodo: 'Abram alas para o dodo!', arara: 'Cá cá cá!', liberdade: 'Liberdade e fogo de artifício!', pato: 'QUACK QUACK!', mocho: 'Uuuh! Quem? Quem?', abutre: '*Cheira-me a carniça, caralho!', corvo: 'CRÁÁÁ!', ju: 'Sorri para a fotografia!', aguia: 'Apito final!', dragao: '*Toma lá fogo, carago!', fenix: 'Faíscas!', pomba: 'Paz e amor!', morcego: 'Iiiiih!', conde: 'A minha capa!' };
+const SP_SAY = { tucano: 'Fruta para todos!', picapau: 'Toc toc toc!', dodo: 'Abram alas para o dodo!', arara: 'Cá cá cá!', liberdade: 'Liberdade e fogo de artifício!', pato: 'QUACK QUACK!', mocho: 'Uuuh! Quem? Quem?', abutre: '*Cheira-me a carniça, caralho!', corvo: 'CRÁÁÁ!', ju: 'Sorri para a fotografia!', aguia: 'Apito final!', dragao: '*Toma lá fogo, carago!', fenix: 'Faíscas!', pomba: 'Paz e amor!', morcego: 'Iiiiih!', conde: 'A minha capa!', gaivota: 'Dá cá as moedas!', pelicano: 'Cuidado com o bico!', pavao: 'Admirem a cauda!', ptero: '*Rooaar, caralho!' };
 FX.sp = []; FX.parts = [];
 function fireSpecial(now) {
   const id = sel.h; haptic('notificationOccurred', 'warning');
@@ -1779,6 +1930,13 @@ function fireSpecial(now) {
   if (id === 'pato') { cry('pato'); FX.sp.push({ k: 'quack', start: now, until: now + 2600 }); FX.sp.push({ k: 'text', txt: 'QUACK!!', col: '#4fd08a', start: now, until: now + 900 }); }
   if (id === 'mocho') { cry('mocho'); FX.sp.push({ k: 'stare', start: now, until: now + 1800 }); }
   if (id === 'abutre') { beep(160, .7, 'sawtooth', .03, 10); FX.sp.push({ k: 'flies', start: now, until: now + 3200, f: Array.from({ length: 36 }, () => ({ x: (Math.random() - .5) * 90, y: (Math.random() - .5) * 90 })) }); }
+  if (id === 'gaivota') { cry('gaivota'); FX.sp.push({ k: 'steal', start: now, until: now + 2600 }); }
+  if (id === 'pelicano') { cry('pelicano'); FX.sp.push({ k: 'dive', start: now, until: now + 1800 }); }
+  if (id === 'pavao') { cry('pavao'); FX.sp.push({ k: 'fan', start: now, until: now + 2300 }); }
+  if (id === 'ptero') {
+    cry('ptero'); for (let i = 0; i < 7; i++) setTimeout(() => { shake = Math.max(shake, 9); }, i * 200);
+    FX.sp.push({ k: 'terror', start: now, until: now + 2600, b: Array.from({ length: 16 }, () => ({ x: 20 + Math.random() * 320, d: Math.random() * 0.5, c: PALETTE[(Math.random() * PALETTE.length) | 0], r: Math.random() * 6 })) });
+  }
   const line = SP_SAY[id];
   if (line && (CONFIG.asneiras || line[0] !== '*') && !isTalking('h')) say('h', line[0] === '*' ? line.slice(1) : line, 1600, true);
 }
@@ -1788,6 +1946,10 @@ function updateSpecials(now, dt) {
     if (e.k === 'embers') for (let i = 0; i < 1.3; i++) FX.parts.push({ k: 'ember', x: Math.random() * W, y: H - GROUND, vx: (Math.random() - .5) * 1.2, vy: -(1 + Math.random() * 2.2), life: 1, r: 1.5 + Math.random() * 2.5 });
     if (e.k === 'feathers' && Math.random() < 0.5) FX.parts.push({ k: 'feather', x: W + 10, y: Math.random() * (H - GROUND - 60), vx: -(1.5 + Math.random() * 1.5), vy: 0.5 + Math.random(), life: 1, r: 6 + Math.random() * 4, rot: Math.random() * 6 });
     if (e.k === 'swarm') for (const b of e.bats) b.x -= b.v * dt;
+    if (e.k === 'steal' && state === 'playing') {
+      const gx = W + 50 - ((now - e.start) / (e.until - e.start)) * (W + 130);
+      coins = coins.filter(c => { if (Math.abs(c.x - gx) < 34) { pops.push({ x: c.x, y: c.y, txt: '😈', life: 1, c: '#fff' }); return false; } return true; });
+    }
     if (e.k === 'confetti') for (let i = 0; i < 1.2; i++) FX.parts.push({ k: 'feather', x: W + 10, y: Math.random() * (H - GROUND - 60), vx: -(2 + Math.random() * 2), vy: 0.5 + Math.random(), life: 1, r: 6 + Math.random() * 4, rot: Math.random() * 6, c: ['#d32f2f', '#1e63c6', '#f6c21b', '#2e9e4f'][(Math.random() * 4) | 0] });
     if (e.k === 'fireworks' && now >= e.next) {
       e.next = now + 380; const bx = 40 + Math.random() * 280, by = 70 + Math.random() * 230, col = ['#ff5a5a', '#fff', '#6fa8ff', '#ffd23f'][(Math.random() * 4) | 0];
@@ -1868,6 +2030,28 @@ function drawSpecials() {
       for (const cr of e.c) { ctx.beginPath(); cr.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); ctx.stroke(); }
     } else if (e.k === 'fat') {
       drawChar(ctx, 'dodo', W + 160 - pr * (W + 420), 330, { s: 4.6, w: Math.sin(t * 0.12), m: 0, tt: t, a: 0.93, glow: false });
+    } else if (e.k === 'steal') {
+      drawChar(ctx, 'gaivota', W + 50 - pr * (W + 130), 250 + Math.sin(pr * 12) * 40, { s: 2.4, w: Math.sin(t * 0.4), m: 0.6, tt: t, a: 0.95, glow: false, rot: -0.08 });
+    } else if (e.k === 'dive') {
+      const y = -110 + Math.sin(Math.PI * pr) * 520;
+      drawChar(ctx, 'pelicano', W * 0.55 + (pr - 0.5) * 70, y, { s: 4.4, w: Math.sin(t * 0.3), m: pr < 0.5 ? 0.9 : 0, tt: t, a: 0.92, glow: false, rot: pr < 0.5 ? 1.25 : -1.25 });
+    } else if (e.k === 'fan') {
+      const al = 0.88 * Math.sin(Math.PI * Math.min(1, pr)); ctx.globalAlpha = al;
+      for (let i = 0; i < 11; i++) {
+        const a = Math.PI + 0.12 + i * (Math.PI - 0.24) / 10 + Math.sin(t * 0.06 + i) * 0.02, L = 380, cx = W / 2, cy = H - GROUND + 40;
+        const ex = cx + Math.cos(a) * L, ey = cy + Math.sin(a) * L;
+        ctx.strokeStyle = '#2a7a4a'; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(ex, ey); ctx.stroke();
+        ctx.fillStyle = '#1e8f6a'; ctx.beginPath(); ctx.ellipse(ex, ey, 62, 46, a, 0, 7); ctx.fill();
+        ctx.fillStyle = '#1b4fa8'; ctx.beginPath(); ctx.ellipse(ex, ey, 38, 30, a, 0, 7); ctx.fill();
+        ctx.fillStyle = '#e8c23a'; ctx.beginPath(); ctx.ellipse(ex, ey, 18, 14, a, 0, 7); ctx.fill();
+        ctx.fillStyle = '#0b2a4a'; ctx.beginPath(); ctx.arc(ex, ey, 7, 0, 7); ctx.fill();
+      }
+    } else if (e.k === 'terror') {
+      drawChar(ctx, 'ptero', W + 160 - pr * (W + 380), 150 + Math.sin(pr * 8) * 25, { s: 5.2, w: Math.sin(t * 0.22), m: 0.8, tt: t, a: 0.93, glow: false });
+      for (const b of e.b) {
+        const q = Math.max(0, pr - b.d); if (q <= 0) continue;
+        ctx.save(); ctx.translate(b.x, -20 + q * q * (H + 60)); ctx.rotate(b.r + q * 6); ctx.fillStyle = b.c; ctx.fillRect(-14, -6, 28, 12); ctx.fillStyle = 'rgba(217,164,65,.85)'; ctx.fillRect(-8, -1.5, 16, 3); ctx.restore();
+      }
     } else if (e.k === 'stare') {
       const al = 0.7 * Math.sin(Math.PI * Math.min(1, pr));
       [W / 2 - 62, W / 2 + 62].forEach(ex => {
@@ -1981,7 +2165,8 @@ function draw() {
   }
   if (state !== 'pick') {
     if (!hdFront()) drawHinderer(false);
-    for (const p of pipes) drawPipe(p);
+    for (const p of pipes) if (!p.broken) drawPipe(p);
+    drawDebris();
     drawCoins();
     if (th) drawGroundStadium(); else drawGround();
     drawFeathers();
