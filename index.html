@@ -189,7 +189,19 @@ const CRY = {
     { at: 1.0, d: .55, ty: 'sine', f0: 390, f1: 290, lf: 5, ld: 10, v: .8 }],
   abutre: [
     { at: 0, d: .8, f0: 300, f1: 140, lf: 90, ld: 90, b0: 1800, b1: 700, q: 1.2, v: .6 },
-    { at: .1, d: .7, ty: 'square', f0: 210, f1: 110, v: .3, b0: 900, b1: 500, q: 1 }]
+    { at: .1, d: .7, ty: 'square', f0: 210, f1: 110, v: .3, b0: 900, b1: 500, q: 1 }],
+  tucano: [
+    { at: 0, d: .3, ty: 'square', f0: 700, f1: 450, lf: 40, ld: 80, b0: 1500, b1: 900, q: 2, v: .6 },
+    { at: .4, d: .3, ty: 'square', f0: 650, f1: 420, lf: 40, ld: 80, b0: 1500, b1: 900, q: 2, v: .6 },
+    { at: .8, d: .4, ty: 'square', f0: 620, f1: 380, lf: 40, ld: 80, b0: 1400, b1: 800, q: 2, v: .6 }],
+  picapau: [0, .07, .14, .21, .28, .35, .5, .57, .64].map(at => ({ at, d: .05, ty: 'square', f0: 900, f1: 300, b0: 1200, b1: 600, q: 3, v: .8 })),
+  dodo: [
+    { at: 0, d: .5, f0: 180, f1: 120, lf: 14, ld: 20, b0: 700, b1: 400, q: 2 },
+    { at: .6, d: .6, f0: 170, f1: 100, lf: 14, ld: 20, b0: 700, b1: 400, q: 2 }],
+  arara: [
+    { at: 0, d: .35, f0: 1500, f1: 900, lf: 50, ld: 200, b0: 2000, b1: 1200, q: 2.5 },
+    { at: .4, d: .3, f0: 1300, f1: 800, lf: 50, ld: 200, b0: 2000, b1: 1200, q: 2.5 },
+    { at: .8, d: .4, f0: 1600, f1: 900, lf: 50, ld: 200, b0: 2000, b1: 1200, q: 2.5 }]
 };
 function cry(id) {
   if (muted) return;
@@ -631,6 +643,50 @@ const CHARS = {
     rec: ['Recorde novo! Hoje como bem!', '*Recorde novo, caralho! Banquete!'],
     rd: ['Toca no ecrã, tenho fome!', '*Toca no ecrã, caralho, tenho fome!'],
     in: ['Sou o Abutre. Tenho paciência e fome.', 'Olá. Sou o Abutre. Não olhes para o meu almoço.']
+  },
+  tucano: {
+    name: 'Tucano', emoji: '🥭', bio: 'Colorido, esfomeado e muito orgulhoso do bico.',
+    col: '#ffb71c', pc: '#ffb71c', gl: [255, 190, 40, .26], pitch: .9, rate: 1.0, ps: .95, hs: .95, ts: 1.0, tox: 6, toy: 1,
+    d: ['Ai, o meu bico!', 'Isto é demasiado pesado para voar!', 'O meu bico bateu primeiro!', 'Tanta cor para tão pouca pontaria!', 'Quero uma fruta!', '*Foda-se, bati com o bico!', '*Caralho, o bico não ajuda nada!', '*Puta que pariu, que bico de merda!', '*Merda de livros, tão bonitos e tão cabrões!'],
+    t: ['Já provaste fruta, {p}? É a melhor coisa do mundo!', 'Olha o meu bico, é maior que o teu!', 'Quanta cor, quanta alegria, e tu a perder!', 'Dá-me uma manga e eu ajudo-te!', 'Isso é voar? Eu prefiro empoleirar-me.', 'Tucano é que voa com estilo!', '*Voas pior que um pássaro sem asas, caralho!', '*Foda-se, {p}, eu só quero fruta, porra!', '*Vai-te foder, {p}, o meu bico é maior!'],
+    r: ['Cala-te, {h}, estou a voar!', 'Sai da frente, {h}!', 'Dá-me espaço, {h}!', '*{h}, vai-te foder, estou concentrado!', '*Foda-se, {h}, deixa-me voar!'],
+    p: ['{n}! Que beleza!', '{n}! Bico de ouro!', '*{n}, caralho! Que bico, porra!', '*{n}! Toma, livros do caralho!'],
+    rec: ['Recorde novo! Bico de ouro!', '*Recorde novo, caralho! Fruta para todos!'],
+    rd: ['Toca no ecrã e bora lá!', '*Toca no ecrã, caralho! Bora!'],
+    in: ['Sou o Tucano! Tenho fome de fruta.', 'Olá! Sou o Tucano. Gosto do meu bico.']
+  },
+  picapau: {
+    name: 'Pica-pau', emoji: '🌲', bio: 'Cabeça dura, dores de cabeça e muito toc-toc.',
+    col: '#ff5a5a', pc: '#1c1c22', gl: [255, 90, 90, .24], pitch: 1.1, rate: 1.1, ps: 1, hs: 1, ts: 1.2, tox: 3, toy: 0,
+    d: ['Toc toc toc... bati!', 'A minha cabeça aguenta tudo, menos isto!', 'Ai, a dor de cabeça!', 'Estava só a bicar o livro!', 'Isto é madeira de má qualidade!', '*Foda-se, bati com a cabeça!', '*Caralho, toc toc, que dor!', '*Puta que pariu, e eu tenho a cabeça dura!', '*Merda de livros, toc toc!'],
+    t: ['Toc toc toc! Estás a ouvir?', 'Bico na madeira, olhos na estrada, {p}!', 'Eu cá bico árvores, tu bates em livros!', 'Cuidado com a cabeça! Eu já não tenho cérebro.', 'Toc toc! Quem é? É o azar!', 'Tenho dores de cabeça desde 1998.', '*Voas pior que um tronco, caralho!', '*Toc toc, foda-se, és péssimo, {p}!', '*Vai-te foder, {p}, toc toc toc!'],
+    r: ['Cala-te, {h}, toc toc!', 'Sai da frente, {h}!', 'Deixa-me bicar em paz, {h}!', '*{h}, vai-te foder, toc toc!', '*Foda-se, {h}, bico-te a cabeça!'],
+    p: ['{n}! Toc toc toc!', '{n}! Cabeça dura, grande pássaro!', '*{n}, caralho! Toc toc, sou o maior!', '*{n}! Toma, madeira do caralho!'],
+    rec: ['Recorde novo! Toc toc campeão!', '*Recorde novo, caralho! Toc toc!'],
+    rd: ['Toca no ecrã, toc toc!', '*Toca no ecrã, caralho, toc toc!'],
+    in: ['Toc toc! Sou o Pica-pau. Posso entrar?', 'Olá! Sou o Pica-pau. Cabeça dura, coração mole.']
+  },
+  dodo: {
+    name: 'Dodo', emoji: '🥚', bio: 'Extinto, gorducho e convencido de que sabe voar.',
+    col: '#c8c28a', pc: '#8a8f94', gl: [200, 200, 140, .24], pitch: .55, rate: .9, ps: 1, hs: .95, ts: 1.15, tox: 2, toy: 3,
+    d: ['Eu sou extinto, é normal que caia!', 'Os dodos não voam, esqueci-me!', 'Ai! Isto sempre foi um mau plano.', 'Fui feito para andar, não para isto!', 'Eu devia ter ficado na ilha!', '*Foda-se, bati! Eu nem devia estar aqui!', '*Caralho, extinto e ainda levo porrada!', '*Puta que pariu, os dodos não voam, porra!', '*Merda de ideia, caralho!'],
+    t: ['Eu sou extinto, tu vais atrás de mim, {p}!', 'Cuidado, eu sou só um dodo gordo e feliz!', 'Os meus antepassados também não sabiam voar!', 'Olha para mim! Sou lindo!', 'Já perdi tudo: ilha, asas e dignidade.', 'Dá-me uma fruta e eu perdoo-te!', '*Voas pior que eu, caralho, e eu nem voo!', '*Foda-se, {p}, sou um dodo, não um deus!', '*Vai-te foder, {p}, eu extingui-me por tua causa!'],
+    r: ['Cala-te, {h}, sou extinto mas tenho direitos!', 'Sai da frente, {h}!', 'Deixa-me em paz, {h}!', '*{h}, vai-te foder, sou extinto, não surdo!', '*Foda-se, {h}, deixa-me voar!'],
+    p: ['{n}! Nada mau para um extinto!', '{n}! O dodo voa!', '*{n}, caralho! Extinto e vencedor!', '*{n}! Toma, livros do caralho!'],
+    rec: ['Recorde novo! O dodo renasce!', '*Recorde novo, caralho! Extinto uma ova!'],
+    rd: ['Toca no ecrã, o dodo voa!', '*Toca no ecrã, caralho, o dodo voa!'],
+    in: ['Sou o Dodo. Sim, fui extinto. Não me perguntes.', 'Olá! Sou o Dodo. Não sei voar, mas tento.']
+  },
+  arara: {
+    name: 'Arara', emoji: '🦜', bio: 'Colorida, barulhenta e repete tudo o que ouve.',
+    col: '#ff4d4d', pc: '#d32f2f', gl: [255, 80, 80, .26], pitch: 1.5, rate: 1.1, ps: .95, hs: .9, ts: .95, tox: 7, toy: 0,
+    d: ['Ai, as minhas penas todas!', 'Estou despenteada!', 'Papagaio não bate, só cai!', 'Isso foi só um bocadinho!', 'Quem foi que me chamou?', '*Foda-se, bati! E repeti!', '*Caralho, que dor, e eu tão bonita!', '*Puta que pariu, as penas, porra!', '*Merda de livros, cá-cá!'],
+    t: ['Cá cá cá! Repito tudo o que dizes, {p}!', 'Bom dia! Boa noite! Olá! Adeus!', 'Ouvi dizer que estás a perder!', 'Dá-me uma semente, dá, dá, dá!', 'Estou a copiar o teu voo, {p}! Que vergonha!', 'Cá cá! Isso foi mau!', '*Voas pior que um papagaio sem voz, caralho!', '*Foda-se, {p}, eu só repito o que dizes, porra!', '*Vai-te foder, {p}! Repito: vai-te foder!'],
+    r: ['Cala-te, {h}, cá cá!', 'Sai da frente, {h}!', 'Deixa-me voar, {h}!', '*{h}, vai-te foder, cá cá!', '*Foda-se, {h}, repito: foda-se!'],
+    p: ['{n}! Cá cá cá!', '{n}! Colorida e vencedora!', '*{n}, caralho! Repito: caralho!', '*{n}! Toma, livros do caralho!'],
+    rec: ['Recorde novo! Cá cá, sou a melhor!', '*Recorde novo, caralho! Repito: caralho!'],
+    rd: ['Toca no ecrã, cá cá!', '*Toca no ecrã, caralho, cá cá!'],
+    in: ['Cá cá! Sou a Arara. Falo por todos.', 'Olá! Sou a Arara. Repito tudo.']
   }
 };
 
@@ -711,7 +767,76 @@ DRAW.abutre = function (c, w, m) {
   featherWing(c, wy, 1, '#33241c', '#120b08');
 };
 
-const ORDER = ['corvo', 'ju', 'aguia', 'liberdade', 'dragao', 'fenix', 'pomba', 'morcego', 'conde', 'pato', 'mocho', 'abutre'];
+DRAW.tucano = function (c, w, m) {
+  const wy = w * 13;
+  c.fillStyle = '#d32f2f'; poly(c, [-12, 2, -22, 8, -17, 9, -11, 6]); c.fill();
+  c.fillStyle = '#15151b'; poly(c, [-12, -3, -28, -7, -26, 1, -28, 7, -12, 5]); c.fill();
+  featherWing(c, wy, .85, '#101015', '#000');
+  c.fillStyle = '#1b1b23'; c.strokeStyle = '#3a3a48'; c.lineWidth = 1.4; ell(c, 0, 0, 16, 11); fs(c);
+  c.fillStyle = '#fff3b0'; ell(c, 8, 1, 6.5, 7); c.fill();
+  c.fillStyle = '#1b1b23'; c.strokeStyle = '#3a3a48'; c.beginPath(); c.arc(12, -6, 7.6, 0, TAU); fs(c);
+  c.fillStyle = '#ffb71c'; c.strokeStyle = '#a85d00'; c.lineWidth = 1.3;
+  c.beginPath(); c.moveTo(17, -11); c.quadraticCurveTo(34, -15, 42, -3); c.quadraticCurveTo(32, -2.5, 18, -3.5); c.closePath(); fs(c);
+  c.fillStyle = '#ff6a1a'; c.beginPath(); c.moveTo(34, -9.5); c.quadraticCurveTo(39, -8, 42, -3); c.quadraticCurveTo(38, -3.5, 34, -4); c.closePath(); c.fill();
+  c.fillStyle = '#e8910e'; c.strokeStyle = '#a85d00'; c.beginPath(); c.moveTo(18, -3.5); c.quadraticCurveTo(31, -2, 40, -2 + m * 6); c.quadraticCurveTo(30, 1 + m * 6, 18, 1); c.closePath(); fs(c);
+  dot(c, 14.6, -8.2, 3.6, '#2d9cdb'); dot(c, 14.9, -8.2, 1.7, '#000');
+  featherWing(c, wy, 1, '#17171e', '#000');
+};
+DRAW.picapau = function (c, w, m) {
+  const wy = w * 14;
+  c.fillStyle = '#1c1c22'; c.strokeStyle = '#000'; c.lineWidth = 1.2; poly(c, [-11, -1, -27, 3, -24, 9, -11, 6]); fs(c);
+  c.fillStyle = '#fff'; poly(c, [-16, 2, -19, 2, -19.5, 5, -16, 5]); c.fill();
+  featherWing(c, wy, .85, '#141419', '#000');
+  c.fillStyle = '#1c1c22'; c.strokeStyle = '#42425a'; c.lineWidth = 1.4; ell(c, 0, 0, 16, 11); fs(c);
+  c.fillStyle = '#f4f1ea'; c.beginPath(); c.moveTo(-2, 2); c.quadraticCurveTo(6, 0, 14, 3); c.quadraticCurveTo(6, 9, -2, 8); c.closePath(); c.fill();
+  c.fillStyle = '#d3202b'; poly(c, [10, -12, 1, -19, 5, -10]); c.fill(); poly(c, [13, -13, 5, -22, 8, -11]); c.fill(); poly(c, [7, -11, -2, -14, 3, -8]); c.fill();
+  c.fillStyle = '#1c1c22'; c.strokeStyle = '#42425a'; c.beginPath(); c.arc(12, -6, 7.8, 0, TAU); fs(c);
+  c.fillStyle = '#f4f1ea'; ell(c, 13, -3.5, 5, 2.2, -.2); c.fill();
+  c.fillStyle = '#3a3a44'; c.strokeStyle = '#0d0d12'; c.lineWidth = 1; poly(c, [18, -7.4, 31, -5.6 - m * 2, 31, -4.4, 18, -3.8]); fs(c);
+  c.fillStyle = '#2b2b33'; poly(c, [18, -3.8, 29, -3.8 + m * 5, 18, -1.5]); fs(c);
+  dot(c, 15, -7.4, 2, '#fff'); dot(c, 15.5, -7.4, 1, '#000');
+  featherWing(c, wy, 1, '#1c1c22', '#000');
+  c.strokeStyle = '#fff'; c.lineWidth = 1.4; c.beginPath();
+  c.moveTo(-14, wy * .45 + 1); c.lineTo(-18, wy * .75 + 5); c.moveTo(-19, wy * .65 + 1); c.lineTo(-23, wy * .98 + 4); c.stroke();
+};
+DRAW.dodo = function (c, w, m) {
+  const wy = w * 6;
+  c.strokeStyle = '#6e5f3a'; c.lineWidth = 2; c.lineCap = 'round';
+  c.beginPath(); c.moveTo(-14, -3); c.quadraticCurveTo(-26, -12, -22, -2); c.moveTo(-14, 0); c.quadraticCurveTo(-30, -2, -23, 4); c.stroke();
+  c.strokeStyle = '#d9b84a'; c.lineWidth = 2.4;
+  c.beginPath(); c.moveTo(-3, 12); c.lineTo(-5, 18); c.lineTo(-9, 18); c.moveTo(4, 12); c.lineTo(2, 18); c.lineTo(-2, 18); c.stroke();
+  c.fillStyle = '#8a8f94'; c.strokeStyle = '#4e5358'; c.lineWidth = 1.5; ell(c, 0, 1, 19, 14); fs(c);
+  c.fillStyle = '#b7bcc0'; ell(c, 3, 5, 12, 7); c.fill();
+  c.fillStyle = '#7a8085'; c.strokeStyle = '#4e5358'; c.lineWidth = 1.2;
+  c.beginPath(); c.moveTo(-4, -2); c.quadraticCurveTo(-12, wy - 6, -20, wy * 1.6 + 1); c.quadraticCurveTo(-8, wy * .6 + 7, 2, 5); c.closePath(); fs(c);
+  c.fillStyle = '#a3a8ac'; c.strokeStyle = '#4e5358'; c.lineWidth = 1.5; c.beginPath(); c.arc(14, -8, 8.6, 0, TAU); fs(c);
+  c.fillStyle = '#c3b94d'; c.strokeStyle = '#6f6a22'; c.lineWidth = 1.2;
+  c.beginPath(); c.moveTo(20, -13); c.quadraticCurveTo(37, -14, 35, 0); c.quadraticCurveTo(32, -4, 20, -5.5); c.closePath(); fs(c);
+  c.fillStyle = '#9e9538'; c.beginPath(); c.moveTo(20, -5.5); c.quadraticCurveTo(30, -4 + m * 5, 22, -1.5 + m * 6); c.closePath(); c.fill(); c.stroke();
+  dot(c, 17.5, -10.5, 3.4, '#fff'); dot(c, 18.4, -10.2, 1.6, '#000');
+};
+DRAW.arara = function (c, w, m) {
+  const wy = w * 14;
+  c.fillStyle = '#c62828'; c.strokeStyle = '#7a1212'; c.lineWidth = 1.2; poly(c, [-11, -2, -38, -9, -42, -2, -38, 4, -11, 5]); fs(c);
+  c.fillStyle = '#1e63c6'; poly(c, [-36, -8.5, -42, -2, -38, 4, -33, -2]); c.fill();
+  c.fillStyle = '#f6c21b'; poly(c, [-28, -7, -33, -2, -28, 3, -24, -2]); c.fill();
+  const aw = (k, fill) => {
+    featherWing(c, wy, k, fill, '#0d3a85');
+    c.fillStyle = '#f6c21b'; c.beginPath(); c.moveTo(-8 * k, 0); c.quadraticCurveTo(-16 * k, wy * .7 * k - 4, -22 * k, wy * .95 * k + 1);
+    c.lineTo(-20 * k, wy * .95 * k + 7); c.quadraticCurveTo(-12 * k, wy * .6 * k + 6, -6 * k, 4); c.closePath(); c.fill();
+  };
+  aw(.85, '#1a56b0');
+  c.fillStyle = '#d32f2f'; c.strokeStyle = '#7a1212'; c.lineWidth = 1.4; ell(c, 0, 0, 16, 10.5); fs(c);
+  c.beginPath(); c.arc(13, -6, 8, 0, TAU); fs(c);
+  c.fillStyle = '#f4f1ea'; ell(c, 15.5, -5.5, 5, 4.4); c.fill();
+  c.fillStyle = '#f2e8d0'; c.strokeStyle = '#8a7c58'; c.lineWidth = 1.2;
+  c.beginPath(); c.moveTo(18, -11.5); c.quadraticCurveTo(31, -13, 29.5, -.5); c.quadraticCurveTo(26, -6.5, 18, -5.5); c.closePath(); fs(c);
+  c.fillStyle = '#222'; poly(c, [18.5, -5.5, 26, -4.2 + m * 2, 24, -.5 + m * 5.5, 18, -1.6]); c.fill();
+  dot(c, 15.8, -7.6, 2.3, '#f6c21b'); dot(c, 16.1, -7.6, 1.1, '#000');
+  aw(1, '#2574d6');
+};
+
+const ORDER = ['corvo', 'ju', 'aguia', 'liberdade', 'dragao', 'fenix', 'pomba', 'morcego', 'conde', 'pato', 'mocho', 'abutre', 'tucano', 'picapau', 'dodo', 'arara'];
 for (const id of ORDER) { CHARS[id].id = id; CHARS[id].draw = DRAW[id]; }
 
 function drawChar(c, id, x, y, o) {
@@ -895,10 +1020,14 @@ const TRAITS = {
   pato:    { dry: 1, windK: 0.7, t: 'Impermeável: a trovoada não te escurece nem cega, e o vento é mais fraco.', sp: 'Quacks: patinhos de borracha a cair por todo o lado.' },
   mocho:   { night: 1.8, t: 'Visão noturna: vês muito melhor no escuro e no nevoeiro.', sp: 'Olhar fixo: dois olhos gigantes a espreitar-te.' },
   abutre:  { nometeor: 1, grav: 0.4, t: 'Duro de roer: ignora meteoros e cai mais devagar.', sp: 'Moscas: nuvem de moscas à tua volta.' },
+  tucano:  { gapPlus: 12, t: 'Bico guia: os vãos entre as torres são mais largos.', sp: 'Fruta: fruta a rebentar no ecrã e a tapar-te a vista.' },
+  picapau: { pw: 0.78, t: 'Bicador: as torres de livros são mais estreitas para ti.', sp: 'Toc toc: marteladas, rachas no ecrã e tremores.' },
+  dodo:    { revive: 2, hr: 16, t: 'Gorducho: caixa de colisão maior, mas renasce duas vezes.', sp: 'Passeio: o dodo atravessa o ecrã a tapar-te tudo.' },
+  arara:   { t: 'Papagaio: copia a característica de quem te atrapalha!', sp: 'Penas coloridas: chuva de penas e gritos.' },
   conde:   { calm: 2, t: 'Hipnose: quem te atrapalha faz tudo metade das vezes.', sp: 'Capa: cobre-te o ecrã por instantes.' }
 };
-const PT = () => TRAITS[sel.p];
-let invulnUntil = 0, revived = false, shieldUsed = false;
+const PT = () => sel.p === 'arara' ? Object.assign({}, TRAITS[sel.h] || {}, { copy: 1 }) : TRAITS[sel.p];
+let invulnUntil = 0, revived = 0, shieldUsed = false;
 
 /* ====== DIFICULDADES ====== */
 const MODES = {
@@ -992,6 +1121,7 @@ const PALETTE = ['#5b2a86', '#7a1f3d', '#1f4e5f', '#8a5a1e', '#2e3a6e', '#3f5d2a
 function makePipe() {
   let gap = Math.max(138, 176 - score * 1.5);
   if (on('aperto')) gap = Math.max(116, gap - 26);
+  gap += PT().gapPlus || 0;
   const min = 120 + gap / 2, max = H - GROUND - 110 - gap / 2;
   const amp = on('torres') ? Math.min(34, (max - min) / 2) : 0;
   const mkBooks = () => Array.from({ length: 30 }, () => ({
@@ -1020,7 +1150,7 @@ function showReady() {
   say('h', rnd(pool(sel.h, 'in')), 5000, false);
 }
 function startGame() {
-  state = 'playing'; readyEl.classList.add('hidden'); bird.vy = -(PT().flap || 7.4) + 0.2; playStart = performance.now(); bird.r = PT().hr || 13; invulnUntil = 0; revived = false; shieldUsed = false;
+  state = 'playing'; readyEl.classList.add('hidden'); bird.vy = -(PT().flap || 7.4) + 0.2; playStart = performance.now(); bird.r = PT().hr || 13; invulnUntil = 0; revived = 0; shieldUsed = false;
   const nowT = performance.now();
   setMode(pickMode()); lastMode = cur;
   FX.nextFlash = nowT + 2500; FX.nextMeteor = nowT + 2500; FX.gust.state = 0; FX.gust.next = nowT + 3500;
@@ -1057,7 +1187,7 @@ function die(cause) {
     beep(700, .25, 'triangle', .07, 500); haptic('notificationOccurred', 'success');
     return;
   }
-  if (PT().revive && !revived) { revived = true; reviveNow(nowD); return; }
+  if (PT().revive && revived < PT().revive) { revived++; reviveNow(nowD); return; }
   state = 'over'; overAt = performance.now(); shake = 10; lastDur = overAt - playStart;
   bird.vy = -4;
   const fc = PL().pc;
@@ -1276,7 +1406,8 @@ function update(dt) {
     const r = bird.r - 2;
     if (bird.y + r >= H - GROUND) { bird.y = H - GROUND - r; die('ground'); }
     for (const p of pipes) {
-      if (bird.x + r > p.x && bird.x - r < p.x + PW &&
+      const pi = PW * (1 - (PT().pw || 1)) / 2;
+      if (bird.x + r > p.x + pi && bird.x - r < p.x + PW - pi &&
           (bird.y - r < p.gapY - p.gap / 2 || bird.y + r > p.gapY + p.gap / 2)) { die('pipe'); break; }
     }
   } else if (state === 'over') {
@@ -1485,7 +1616,7 @@ function drawWarning() {
 
 
 /* ====== ESPECIAL DE QUEM ATRAPALHA (distrações com aviso sonoro) ====== */
-const SP_SAY = { liberdade: 'Liberdade e fogo de artifício!', pato: 'QUACK QUACK!', mocho: 'Uuuh! Quem? Quem?', abutre: '*Cheira-me a carniça, caralho!', corvo: 'CRÁÁÁ!', ju: 'Sorri para a fotografia!', aguia: 'Apito final!', dragao: '*Toma lá fogo, carago!', fenix: 'Faíscas!', pomba: 'Paz e amor!', morcego: 'Iiiiih!', conde: 'A minha capa!' };
+const SP_SAY = { tucano: 'Fruta para todos!', picapau: 'Toc toc toc!', dodo: 'Abram alas para o dodo!', arara: 'Cá cá cá!', liberdade: 'Liberdade e fogo de artifício!', pato: 'QUACK QUACK!', mocho: 'Uuuh! Quem? Quem?', abutre: '*Cheira-me a carniça, caralho!', corvo: 'CRÁÁÁ!', ju: 'Sorri para a fotografia!', aguia: 'Apito final!', dragao: '*Toma lá fogo, carago!', fenix: 'Faíscas!', pomba: 'Paz e amor!', morcego: 'Iiiiih!', conde: 'A minha capa!' };
 FX.sp = []; FX.parts = [];
 function fireSpecial(now) {
   const id = sel.h; haptic('notificationOccurred', 'warning');
@@ -1497,6 +1628,17 @@ function fireSpecial(now) {
   if (id === 'pomba') { beep(430, .25, 'sine', .05, -80); FX.sp.push({ k: 'feathers', start: now, until: now + 3200 }); }
   if (id === 'morcego') FX.sp.push({ k: 'swarm', start: now, until: now + 2600, bats: Array.from({ length: 9 }, (_, i) => ({ x: W + 30 + i * 55, y: 60 + Math.random() * (H - GROUND - 140), v: 5 + Math.random() * 3, ph: Math.random() * 6 })) });
   if (id === 'conde') FX.sp.push({ k: 'cape', start: now, until: now + 1500 });
+  if (id === 'tucano') {
+    for (let i = 0; i < 3; i++) setTimeout(() => beep(180 - i * 20, .12, 'sawtooth', .06, -60), i * 120);
+    FX.sp.push({ k: 'splats', start: now, until: now + 3200, b: Array.from({ length: 7 }, (_, i) => ({ x: 30 + Math.random() * 300, y: 70 + Math.random() * 400, r: 22 + Math.random() * 26, c: ['#ff8a1f', '#e53935', '#7cb342', '#fdd835'][i % 4] })) });
+  }
+  if (id === 'picapau') {
+    cry('picapau');
+    for (let i = 0; i < 6; i++) setTimeout(() => { shake = Math.max(shake, 8); }, i * 220);
+    FX.sp.push({ k: 'cracks', start: now, until: now + 2400, c: Array.from({ length: 4 }, () => { let x = 30 + Math.random() * 300, y = 60 + Math.random() * 380; const pts = [[x, y]]; for (let i = 0; i < 6; i++) { x += (Math.random() - .5) * 60; y += (Math.random() - .3) * 50; pts.push([x, y]); } return pts; }) });
+  }
+  if (id === 'dodo') { cry('dodo'); FX.sp.push({ k: 'fat', start: now, until: now + 2600 }); }
+  if (id === 'arara') { cry('arara'); FX.sp.push({ k: 'confetti', start: now, until: now + 2600 }); }
   if (id === 'liberdade') FX.sp.push({ k: 'fireworks', start: now, until: now + 2600, next: 0 });
   if (id === 'pato') { cry('pato'); FX.sp.push({ k: 'quack', start: now, until: now + 2600 }); FX.sp.push({ k: 'text', txt: 'QUACK!!', col: '#4fd08a', start: now, until: now + 900 }); }
   if (id === 'mocho') { cry('mocho'); FX.sp.push({ k: 'stare', start: now, until: now + 1800 }); }
@@ -1510,6 +1652,7 @@ function updateSpecials(now, dt) {
     if (e.k === 'embers') for (let i = 0; i < 1.3; i++) FX.parts.push({ k: 'ember', x: Math.random() * W, y: H - GROUND, vx: (Math.random() - .5) * 1.2, vy: -(1 + Math.random() * 2.2), life: 1, r: 1.5 + Math.random() * 2.5 });
     if (e.k === 'feathers' && Math.random() < 0.5) FX.parts.push({ k: 'feather', x: W + 10, y: Math.random() * (H - GROUND - 60), vx: -(1.5 + Math.random() * 1.5), vy: 0.5 + Math.random(), life: 1, r: 6 + Math.random() * 4, rot: Math.random() * 6 });
     if (e.k === 'swarm') for (const b of e.bats) b.x -= b.v * dt;
+    if (e.k === 'confetti') for (let i = 0; i < 1.2; i++) FX.parts.push({ k: 'feather', x: W + 10, y: Math.random() * (H - GROUND - 60), vx: -(2 + Math.random() * 2), vy: 0.5 + Math.random(), life: 1, r: 6 + Math.random() * 4, rot: Math.random() * 6, c: ['#d32f2f', '#1e63c6', '#f6c21b', '#2e9e4f'][(Math.random() * 4) | 0] });
     if (e.k === 'fireworks' && now >= e.next) {
       e.next = now + 380; const bx = 40 + Math.random() * 280, by = 70 + Math.random() * 230, col = ['#ff5a5a', '#fff', '#6fa8ff', '#ffd23f'][(Math.random() * 4) | 0];
       beep(120, .2, 'sawtooth', .05, -60);
@@ -1553,7 +1696,7 @@ function drawSpecials() {
       ctx.beginPath(); ctx.arc(0, 0, p.r, 0, 7); ctx.fill(); ctx.beginPath(); ctx.arc(p.r * 0.6, -p.r * 0.6, p.r * 0.6, 0, 7); ctx.fill();
       ctx.fillStyle = '#ff8a1f'; ctx.fillRect(p.r * 1.0, -p.r * 0.7, p.r * 0.7, p.r * 0.35); ctx.fillStyle = '#000'; ctx.fillRect(p.r * 0.7, -p.r * 0.95, 2, 2);
     } else if (p.k === 'feather') {
-      ctx.translate(p.x, p.y); ctx.rotate(p.rot); ctx.fillStyle = '#fff'; ctx.strokeStyle = '#c3cce6';
+      ctx.translate(p.x, p.y); ctx.rotate(p.rot); ctx.fillStyle = p.c || '#fff'; ctx.strokeStyle = p.c ? 'rgba(0,0,0,.35)' : '#c3cce6';
       ctx.beginPath(); ctx.ellipse(0, 0, p.r, p.r * 0.32, 0, 0, 7); ctx.fill(); ctx.stroke();
     }
     ctx.restore();
@@ -1578,6 +1721,17 @@ function drawSpecials() {
       ctx.lineTo(cx + 95, H + 10); ctx.closePath();
       const g = ctx.createLinearGradient(cx - 95, 0, cx + 95, 0); g.addColorStop(0, 'rgba(120,10,25,.95)'); g.addColorStop(0.5, 'rgba(60,5,15,.97)'); g.addColorStop(1, 'rgba(20,3,10,.97)');
       ctx.fillStyle = g; ctx.fill();
+    } else if (e.k === 'splats') {
+      ctx.globalAlpha = Math.max(0, 1 - pr * pr);
+      for (const b of e.b) {
+        ctx.fillStyle = b.c; ctx.beginPath(); ctx.arc(b.x, b.y + pr * 20, b.r, 0, 7); ctx.fill();
+        for (let i = 0; i < 6; i++) { const a = i * 1.05 + b.x; ctx.beginPath(); ctx.arc(b.x + Math.cos(a) * b.r * 1.3, b.y + pr * 20 + Math.sin(a) * b.r * 1.3, b.r * 0.22, 0, 7); ctx.fill(); }
+      }
+    } else if (e.k === 'cracks') {
+      ctx.globalAlpha = Math.max(0, Math.min(1, (1 - pr) * 2)); ctx.strokeStyle = 'rgba(240,240,255,.85)'; ctx.lineWidth = 2.2; ctx.lineJoin = 'round';
+      for (const cr of e.c) { ctx.beginPath(); cr.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); ctx.stroke(); }
+    } else if (e.k === 'fat') {
+      drawChar(ctx, 'dodo', W + 160 - pr * (W + 420), 330, { s: 4.6, w: Math.sin(t * 0.12), m: 0, tt: t, a: 0.93, glow: false });
     } else if (e.k === 'stare') {
       const al = 0.7 * Math.sin(Math.PI * Math.min(1, pr));
       [W / 2 - 62, W / 2 + 62].forEach(ex => {
@@ -1672,7 +1826,8 @@ function drawBanner() {
   if (!FX.banner) return;
   const left = FX.banner.until - performance.now();
   if (left <= 0) { FX.banner = null; return; }
-  ctx.save(); ctx.globalAlpha = Math.min(1, left / 400); ctx.font = 'bold 22px Georgia, serif'; ctx.textAlign = 'center';
+  ctx.save(); ctx.globalAlpha = Math.min(1, left / 400); ctx.textAlign = 'center';
+  let fz = 22; do { ctx.font = 'bold ' + fz + 'px Georgia, serif'; fz--; } while (ctx.measureText(FX.banner.text).width > W - 24 && fz > 11);
   ctx.lineWidth = 5; ctx.lineJoin = 'round'; ctx.strokeStyle = 'rgba(10,6,24,.9)';
   ctx.strokeText(FX.banner.text, W / 2, 140); ctx.fillStyle = '#ffcf6b'; ctx.fillText(FX.banner.text, W / 2, 140); ctx.restore();
 }
