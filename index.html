@@ -247,7 +247,15 @@ const CRY = {
   ptero: [
     { at: 0, d: .9, f0: 380, f1: 1900, lf: 55, ld: 160, b0: 1500, b1: 3200, q: 1.5, v: .8 },
     { at: .05, d: .85, ty: 'square', f0: 260, f1: 1300, lf: 30, ld: 90, v: .25, b0: 900, b1: 2000, q: 1 },
-    { at: .9, d: .7, f0: 160, f1: 70, lf: 12, ld: 25, b0: 500, b1: 200, q: 1.5, v: .7 }]
+    { at: .9, d: .7, f0: 160, f1: 70, lf: 12, ld: 25, b0: 500, b1: 200, q: 1.5, v: .7 }],
+  ana: [
+    { at: 0, d: .55, f0: 1500, f1: 2100, lf: 75, ld: 260, b0: 2600, b1: 3600, q: 3, v: .45 },
+    { at: .12, d: .4, ty: 'square', f0: 1700, f1: 2300, lf: 90, ld: 240, v: .12, b0: 3000, b1: 3800, q: 2 }],
+  jorge: [0, .09, .18, .27, .36].map(at => ({ at, d: .1, ty: 'sine', f0: 950, f1: 600, v: .3 })),
+  rafa: [0, .07, .15, .24, .34].map(at => ({ at, d: .09, ty: 'square', f0: 3000, f1: 1200, b0: 4200, b1: 2000, q: .8, v: .3 })),
+  paraiso: [
+    ...[0, .12, .24, .36].map((at, i) => ({ at, d: .45, ty: 'sine', f0: 900 + i * 300, f1: 1200 + i * 300, lf: 8, ld: 20, v: .5 })),
+    { at: .55, d: .35, ty: 'square', f0: 1100, f1: 700, lf: 30, ld: 120, b0: 1800, b1: 1100, q: 3, v: .3 }]
 };
 function cry(id) {
   if (muted) return;
@@ -777,6 +785,50 @@ const CHARS = {
     rec: ['Recorde novo! Rei do céu!', '*Recorde novo, caralho! Os dinossauros não morrem!'],
     rd: ['Toca no ecrã, vamos esmagar livros!', '*Toca no ecrã, caralho, vamos partir isto tudo!'],
     in: ['Sou o Pterodáctilo. Quase um dinossauro. Quase.', 'Rooaar! Sou o Pterodáctilo. Os livros que se cuidem.']
+  },
+  paraiso: {
+    name: 'Paraíso', emoji: '🌴', bio: 'A Ave-do-paraíso. Dança, brilha e custa uma fortuna.',
+    col: '#ffd23f', pc: '#ffb52e', gl: [255, 200, 60, .3], pitch: 1.3, rate: .95, ps: .8, hs: .8, ts: .72, tox: 14, toy: 2,
+    d: ['O meu penteado! Quem ousou?', 'Até a cair sou elegante!', 'Isto não estava na coreografia!', 'Ai, as minhas penas douradas!', 'A dança acabou cedo demais!', '*Foda-se, bati! No meu melhor dia, caralho!', '*Caralho, estraguei a coreografia, porra!', '*Puta que pariu, as penas, caralho!'],
+    t: ['Olha para esta dança, {p}! Aprende!', 'Eu sou o paraíso, tu és só o intervalo!', 'Brilho mais só de acordar, {p}!', 'Não olhes para as penas, {p}, olha para os livros!', 'Tanta beleza e tu a perder!', '*Voas pior do que danças, {p}, caralho!', '*Foda-se, {p}, até o meu bico dança melhor, porra!', '*Cala-te e admira, {p}, caralho!'],
+    r: ['Não me estragues a coreografia, {h}!', 'Sai da frente, {h}, estou a dançar!', '*{h}, vai-te foder, estou a ensaiar!', '*Foda-se, {h}, eu sou o paraíso, tu és o inferno!'],
+    p: ['{n}! Dancei por vocês!', '{n}! Uma estrela!', '*{n}, caralho! Dança e vitória!', '*{n}! Toma, livros de merda!'],
+    rec: ['Recorde novo! Dança da vitória!', '*Recorde novo, caralho! Dancem todos!'],
+    rd: ['Toca no ecrã, a dança vai começar!', '*Toca no ecrã, caralho, vou arrasar!'],
+    in: ['Sou o Paraíso. Prepara-te para ficar sem palavras.', 'Olá! Sou a ave do Paraíso. Podes aplaudir.']
+  },
+  ana: {
+    name: 'Ana', emoji: '🌺', bio: 'Beija-flor minúscula, rapidíssima e muito mal-educada.',
+    col: '#ff5fa8', pc: '#2dbb8a', gl: [255, 95, 168, .26], pitch: 1.8, rate: 1.3, ps: 1, hs: 1, ts: 1.15, tox: -5, toy: 1,
+    d: ['Ai, a minha asa! Bati tão depressa!', 'Fui rápida de mais!', 'Isto foi só um zumbidozinho!', 'Eu paro no ar, mas não nos livros!', 'Preciso de néctar!', '*Foda-se, bati! Logo eu, caralho!', '*Caralho, que dor nas asinhas, porra!', '*Puta que pariu, os livros, caralho!'],
+    t: ['Zzzz! Sou a Ana, {p}! Apanha-me se puderes!', 'Bato as asas oitenta vezes por segundo, {p}!', 'Tu és tão lento, {p}! Zzzz!', 'Dá cá néctar, {p}, ou zumbo-te aos ouvidos!', 'Sou pequenina, mas atrapalho tudo!', '*Voas pior que uma mosca, {p}, caralho!', '*Foda-se, {p}, até eu parada voo melhor, porra!', '*Vou-te picar, {p}, caralho!'],
+    r: ['Zzzz, sai da frente, {h}!', 'Deixa-me em paz, {h}!', '*{h}, vai-te foder, zzzz!', '*Foda-se, {h}, não me chateies a mim!'],
+    p: ['{n}! Zzzz, voei!', '{n}! Rápida e feliz!', '*{n}, caralho! Zzzz, toma!', '*{n}! Toma, livros de merda!'],
+    rec: ['Recorde novo! Zzzz, campeã!', '*Recorde novo, caralho! Zzzz!'],
+    rd: ['Toca no ecrã, zzzz!', '*Toca no ecrã, caralho, zzzz!'],
+    in: ['Olá! Sou a Ana. Zzzz! Não me consegues apanhar.', 'Zzzz! Sou a Ana. Sou pequena, mas sou terrível.']
+  },
+  jorge: {
+    name: 'Jorge', emoji: '🦋', bio: 'Borboleta elegante que já foi lagarta e não deixa ninguém esquecer.',
+    col: '#f08a24', pc: '#f08a24', gl: [240, 138, 36, .26], pitch: 1.2, rate: 1, ps: .95, hs: .95, ts: .95, tox: 3, toy: 6,
+    d: ['Ai, as minhas asas!', 'Isso estragou-me o pó!', 'Eu era lagarta mais resistente!', 'Ia a voar tão bem...', 'Só queria uma flor!', '*Foda-se, bati! E a minha cor, caralho!', '*Caralho, as asas, porra!', '*Puta que pariu, sai-me do caminho, livro!'],
+    t: ['Olá, {p}! Vê como as minhas asas são lindas!', 'Eu fui lagarta e subi na vida, {p}!', 'Cuidado, {p}, o pólen faz espirrar!', 'Voo devagar e ainda assim chego primeiro!', 'Um bater de asas e o teu mundo muda, {p}!', '*Voas pior que uma lagarta, {p}, caralho!', '*Foda-se, {p}, eu mudei e tu continuas igual, porra!', '*Cala-te, {p}, caralho, deixa-me voar!'],
+    r: ['Sai da frente, {h}, estou a planar!', 'Deixa-me em paz, {h}!', '*{h}, vai-te foder, deixa-me voar!', '*Foda-se, {h}, não me estragues o pó!'],
+    p: ['{n}! Que elegância!', '{n}! Asas lindas!', '*{n}, caralho! Borboleta e vencedor!', '*{n}! Toma, livros do caralho!'],
+    rec: ['Recorde novo! Voei mais alto que nunca!', '*Recorde novo, caralho! Isto é que é metamorfose!'],
+    rd: ['Toca no ecrã, vou planar!', '*Toca no ecrã, caralho, vou planar!'],
+    in: ['Olá! Sou o Jorge. Já fui lagarta, sabias?', 'Sou o Jorge. Um bater de asas e tudo muda.']
+  },
+  rafa: {
+    name: 'Rafa', emoji: '🍃', bio: 'Uma folha de árvore com opinião, a cair por gosto.',
+    col: '#6ccf62', pc: '#4caf50', gl: [108, 207, 98, .24], pitch: 1.1, rate: 1, ps: 1, hs: 1, ts: 1, tox: 2, toy: 2,
+    d: ['Caí! Como as folhas no outono!', 'Eu só queria ficar na árvore!', 'Foi o vento, não fui eu!', 'Estou toda amachucada!', 'Era só uma folhinha a passear!', '*Foda-se, caí! Que merda de queda, caralho!', '*Caralho, amachucaram-me, porra!', '*Puta que pariu, o vento, caralho!'],
+    t: ['Sou só uma folha, {p}, mas tapo-te a vista!', 'O outono chegou, {p}!', 'Vou-te cair em cima dos olhos, {p}!', 'Cada folha conta, {p}!', 'Fui da árvore ao teu ecrã, {p}!', '*Voas pior que uma folha seca, {p}, caralho!', '*Foda-se, {p}, eu caio melhor que tu, porra!', '*Cala-te, {p}, caralho, que o vento é meu!'],
+    r: ['Sai da frente, {h}, vai-me levar o vento!', 'Deixa-me cair em paz, {h}!', '*{h}, vai-te foder, tenho vento a mais!', '*Foda-se, {h}, não me amachuques!'],
+    p: ['{n}! Verde e feliz!', '{n}! Que folhas boas!', '*{n}, caralho! Folha e vencedora!', '*{n}! Toma, livros de merda!'],
+    rec: ['Recorde novo! Cheguei ao topo da árvore!', '*Recorde novo, caralho! Isto é que é voar com o vento!'],
+    rd: ['Toca no ecrã, que o vento está a chegar!', '*Toca no ecrã, caralho, que o vento é forte!'],
+    in: ['Sou a Rafa. Uma folha, mas com opinião.', 'Olá! Sou a Rafa. Caí da árvore e ganhei carreira.']
   }
 };
 
@@ -992,7 +1044,71 @@ DRAW.ptero = function (c, w, m) {
   membrane(c, wy, 1.3, '#d89a5c', '#4a2c18', '#4a2c18');
 };
 
-const ORDER = ['corvo', 'ju', 'aguia', 'liberdade', 'dragao', 'fenix', 'pomba', 'morcego', 'conde', 'pato', 'mocho', 'abutre', 'tucano', 'picapau', 'dodo', 'arara', 'gaivota', 'pelicano', 'pavao', 'ptero'];
+DRAW.paraiso = function (c, w, m, tt) {
+  const wy = w * 12, sw = Math.sin(tt * .1) * 4;
+  c.strokeStyle = '#23232c'; c.lineWidth = 1.6;
+  c.beginPath(); c.moveTo(-12, 2); c.bezierCurveTo(-30, 8 + sw, -44, -4 - sw, -60, 6 + sw); c.stroke();
+  c.beginPath(); c.moveTo(-12, 4); c.bezierCurveTo(-28, 16 + sw, -46, 6 - sw, -56, 19 + sw); c.stroke();
+  c.fillStyle = '#18a672'; ell(c, -61, 6 + sw, 3.4, 5.2, .5); c.fill(); ell(c, -57, 19 + sw, 3.4, 5.2, .5); c.fill();
+  for (let i = 0; i < 8; i++) {
+    const a = Math.PI + .05 + i * .2 + Math.sin(tt * .08 + i) * .05, L = 30 + (i % 3) * 5;
+    c.fillStyle = i % 2 ? '#ffd76a' : '#ffb52e'; c.strokeStyle = 'rgba(160,90,0,.5)'; c.lineWidth = .8;
+    ell(c, -6 + Math.cos(a) * L / 2, 2 + Math.sin(a) * L / 2, L / 2, 2.4, a); fs(c);
+  }
+  featherWing(c, wy, .9, '#6b1620', '#2e0810');
+  c.fillStyle = '#8c1f2a'; c.strokeStyle = '#3a0a10'; c.lineWidth = 1.4; ell(c, 0, 0, 15, 9.5); fs(c);
+  c.fillStyle = '#c23a3a'; ell(c, 3, 3, 9, 4.5); c.fill();
+  c.fillStyle = '#ffd633'; c.strokeStyle = '#a07a00'; c.beginPath(); c.arc(13, -6, 7.2, 0, TAU); fs(c);
+  c.fillStyle = '#18a672'; ell(c, 17, -2.4, 4.6, 3.3, .2); c.fill();
+  c.fillStyle = '#e8e2c0'; c.strokeStyle = '#8a8456'; c.lineWidth = 1; poly(c, [19, -7.4, 29.5, -5.5 - m * 1, 29, -4.6 + m * 2.5, 19, -3.4]); fs(c);
+  dot(c, 15.6, -8, 2.2, '#fff'); dot(c, 16, -8, 1.1, '#000');
+  featherWing(c, wy, 1, '#a82a2a', '#3a0a10');
+  c.fillStyle = 'rgba(255,255,255,.8)'; dot(c, -4, -2 + wy * .3, .9, '#fff'); dot(c, 6, -4, .8, '#fff');
+};
+DRAW.ana = function (c, w, m, tt) {
+  c.fillStyle = '#2f8f6e'; c.strokeStyle = '#124a38'; c.lineWidth = 1; poly(c, [-9, 1, -20, -2, -22, 3, -19, 8, -9, 5]); fs(c);
+  c.fillStyle = 'rgba(200,230,255,.5)'; c.strokeStyle = 'rgba(120,160,200,.8)'; c.lineWidth = .8;
+  ell(c, -3, -8 - w * 2, 15, 3.6, -.95 + w * .55); fs(c);
+  ell(c, 1, -7 + w * 2, 13, 3.2, -.55 - w * .55); fs(c);
+  c.fillStyle = '#2fb386'; c.strokeStyle = '#124a38'; c.lineWidth = 1.2; ell(c, 0, 1, 11.5, 6.8, .15); fs(c);
+  c.fillStyle = '#e8e2d0'; ell(c, 2, 4.4, 7, 3); c.fill();
+  c.fillStyle = '#2fb386'; c.beginPath(); c.arc(11, -3, 5.6, 0, TAU); fs(c);
+  c.fillStyle = '#e8197d'; ell(c, 13.2, -.6, 3.4, 2.6, .3); c.fill();
+  c.strokeStyle = '#1c1c22'; c.lineWidth = 1.2; c.beginPath(); c.moveTo(15.5, -4.2); c.lineTo(37, -3.4 + m * 1.5); c.stroke();
+  dot(c, 12.5, -4.4, 1.5, '#fff'); dot(c, 12.9, -4.4, .8, '#000');
+};
+DRAW.jorge = function (c, w, m, tt) {
+  const wy = w * 10, mw = (k, fo, hi) => {
+    c.fillStyle = fo; c.strokeStyle = '#1a1208'; c.lineWidth = 1.6;
+    ell(c, -8 * k, -12 + wy * .6, 11 * k, 15, -.45 + w * .12); fs(c);
+    ell(c, -15 * k, -2 + wy * .35, 9 * k, 8, .25); fs(c);
+    c.strokeStyle = '#1a1208'; c.lineWidth = 1.1; c.beginPath();
+    c.moveTo(-3, -4); c.lineTo(-15 * k, -20 + wy * .5); c.moveTo(-4, -5); c.lineTo(-9 * k, -22 + wy * .6); c.moveTo(-5, -2); c.lineTo(-21 * k, 0 + wy * .3); c.stroke();
+    c.fillStyle = '#fff6df'; dot(c, -12 * k, -23 + wy * .55, 1.4, '#fff6df'); dot(c, -5 * k, -24 + wy * .6, 1.3, '#fff6df'); dot(c, -20 * k, -6 + wy * .35, 1.2, '#fff6df');
+  };
+  mw(.9, '#d9741a');
+  c.fillStyle = '#1e1810'; c.strokeStyle = '#000'; c.lineWidth = 1; ell(c, 0, 1, 15, 3.4, -.05); fs(c);
+  c.beginPath(); c.arc(14.5, -.5, 3.8, 0, TAU); fs(c);
+  c.strokeStyle = '#1e1810'; c.lineWidth = 1.2; c.beginPath(); c.moveTo(16, -3); c.quadraticCurveTo(20, -13, 27, -11); c.moveTo(14, -3.5); c.quadraticCurveTo(14, -14, 20, -15); c.stroke();
+  dot(c, 27, -11, 1.5, '#1e1810'); dot(c, 20, -15, 1.5, '#1e1810');
+  dot(c, 16, -1.2, 1.3, '#fff'); if (m > .2) { c.fillStyle = '#ff6f91'; ell(c, 17.5, 1.6, 1.3, 1 + m); c.fill(); }
+  mw(1, '#f08a24');
+};
+DRAW.rafa = function (c, w, m, tt) {
+  c.save(); c.rotate(Math.sin(tt * .05) * .09 + w * .04);
+  c.strokeStyle = '#6b4a24'; c.lineWidth = 3; c.beginPath(); c.moveTo(-19, 1); c.quadraticCurveTo(-27, 5, -31, 1 + w * 2); c.stroke();
+  const g = c.createLinearGradient(-20, 0, 24, 0); g.addColorStop(0, '#2e8b3a'); g.addColorStop(.6, '#5cc24e'); g.addColorStop(1, '#c6d84a');
+  c.fillStyle = g; c.strokeStyle = '#1b5e20'; c.lineWidth = 1.6;
+  c.beginPath(); c.moveTo(-20, 1); c.bezierCurveTo(-12, -22, 12, -19, 26, -1); c.bezierCurveTo(12, 19, -12, 23, -20, 1); c.closePath(); fs(c);
+  c.strokeStyle = 'rgba(20,80,30,.7)'; c.lineWidth = 1.1; c.beginPath(); c.moveTo(-20, 1); c.lineTo(24, -1);
+  for (let i = 0; i < 4; i++) { const x = -8 + i * 8; c.moveTo(x, 0); c.lineTo(x + 7, -9 - (i < 2 ? 2 : 0)); c.moveTo(x, 0); c.lineTo(x + 7, 9 + (i < 2 ? 2 : 0)); }
+  c.stroke();
+  dot(c, 6, -4, 3.3, '#fff'); dot(c, 14, -4, 3.3, '#fff'); dot(c, 6.8, -4, 1.6, '#000'); dot(c, 14.8, -4, 1.6, '#000');
+  c.fillStyle = '#3a1410'; ell(c, 10.5, 5, 3.4, 1.3 + m * 3.2); c.fill();
+  c.restore();
+};
+
+const ORDER = ['corvo', 'ju', 'aguia', 'liberdade', 'dragao', 'fenix', 'pomba', 'morcego', 'conde', 'pato', 'mocho', 'abutre', 'tucano', 'picapau', 'dodo', 'arara', 'gaivota', 'pelicano', 'pavao', 'ptero', 'ana', 'jorge', 'rafa', 'paraiso'];
 for (const id of ORDER) { CHARS[id].id = id; CHARS[id].draw = DRAW[id]; }
 
 function drawChar(c, id, x, y, o) {
@@ -1022,7 +1138,7 @@ let hSel = lsGetS('corvo_h');                       // 'rand' (sorteia em cada v
 if (hSel !== 'rand' && (!CHARS[hSel] || hSel === sel.p)) hSel = 'rand';
 
 /* ====== PREÇOS (quanto mais valioso o pássaro, mais caro) ====== */
-const PRICE = { corvo: 0, pomba: 30, pato: 55, mocho: 80, picapau: 110, tucano: 140, morcego: 170, abutre: 220, ju: 280, conde: 350, arara: 450, aguia: 600, dragao: 600, fenix: 900, liberdade: 1200, dodo: 2000, gaivota: 250, pelicano: 800, pavao: 3000, ptero: 5000 };
+const PRICE = { corvo: 0, pomba: 30, pato: 55, mocho: 80, picapau: 110, tucano: 140, morcego: 170, abutre: 220, ju: 280, conde: 350, arara: 450, aguia: 600, dragao: 600, fenix: 900, liberdade: 1200, dodo: 2000, gaivota: 250, pelicano: 800, pavao: 3000, ptero: 5000, rafa: 40, jorge: 380, ana: 1500, paraiso: 10000 };
 const hadWallet = walLoad(() => { if (typeof refreshWallet === 'function') refreshWallet(); });
 if (!hadWallet) { [sel.p, hSel].forEach(i => { if (CHARS[i] && !WAL.o.includes(i)) WAL.o.push(i); }); walSave(false); } // quem já jogava mantém os seus
 const owns = id => WAL.o.includes(id);
@@ -1192,11 +1308,15 @@ const TRAITS = {
   pelicano: { magnet: 92, t: 'Papo: apanha moedas e diamantes de longe.', sp: 'Mergulho: um pelicano enorme mergulha e tapa-te o ecrã.' },
   pavao:   { coinX: 2, t: 'Vaidoso: cada moeda vale o dobro.', sp: 'Leque: abre a cauda com olhos e cobre-te o ecrã.' },
   ptero:   { smash: 3, hr: 14, t: 'Esmagador: em vez de morrer, destrói 3 pilhas de livros.', sp: 'Rugido: o ecrã treme e chovem livros.' },
+  ana:     { hr: 9, grav: 0.36, flap: 6.8, t: 'Zumbido: minúscula (caixa de colisão mínima) e cai devagar.', sp: 'Zumbido: enxame de beija-flores a zumbir pelo ecrã.' },
+  jorge:   { grav: 0.3, flap: 6.1, spd: 0.94, t: 'Planador: cai muito devagar e o jogo anda 6% mais devagar.', sp: 'Pólen: nuvem dourada que te tapa a vista.' },
+  rafa:    { grav: 0.26, flap: 5.9, windK: 1.8, hr: 10, t: 'Folha ao vento: cai como uma folha, mas o vento empurra-a muito mais.', sp: 'Outono: chuva de folhas a tapar-te a vista.' },
+  paraiso: { magnet: 55, pipeCoin: 1, dance: 15, t: 'Penas de ouro: +1 moeda por torre. Aura de moedas. A cada 15 pontos dança 3 s e atravessa os livros.', sp: 'Deslumbre: arco-íris e pétalas a cobrir o ecrã.' },
   arara:   { t: 'Papagaio: copia a característica de quem te atrapalha!', sp: 'Penas coloridas: chuva de penas e gritos.' },
   conde:   { calm: 2, t: 'Hipnose: quem te atrapalha faz tudo metade das vezes.', sp: 'Capa: cobre-te o ecrã por instantes.' }
 };
-const PT = () => sel.p === 'arara' ? Object.assign({}, TRAITS[sel.h] || {}, { copy: 1, coinX: 1 }) : TRAITS[sel.p];
-let invulnUntil = 0, revived = 0, shieldUsed = false, smashLeft = 0, debris = [];
+const PT = () => sel.p === 'arara' ? Object.assign({}, TRAITS[sel.h] || {}, { copy: 1, coinX: 1, dance: 0, pipeCoin: 0 }) : TRAITS[sel.p];
+let invulnUntil = 0, revived = 0, shieldUsed = false, smashLeft = 0, debris = [], danceUntil = 0;
 
 /* ====== DIFICULDADES ====== */
 const MODES = {
@@ -1311,6 +1431,14 @@ function spawnCoins(a, b) {
   else { [0.26, 0.42, 0.58, 0.74].forEach((f, i) => add(f, i % 2 ? 24 : -24)); }
   if (Math.random() < 0.28) coins.push({ x: x0 + d * 0.5, y: Math.random() < 0.5 ? 62 + Math.random() * 40 : hi - Math.random() * 40, v: 5, ph: Math.random() * 6 });
 }
+const RAINBOW = ['#ff4d4d', '#ff9f1c', '#ffe14d', '#4dd06b', '#4da6ff', '#b07bff'];
+function startDance(now) {
+  danceUntil = now + 3000;
+  FX.banner = { text: '💃 Dança do paraíso!', until: now + 2400 };
+  for (let i = 0; i < 8; i++) coins.push({ x: W + 20 + i * 34, y: 260 + Math.sin(i * 1.1) * 110, v: 5, ph: Math.random() * 6 });
+  [0, 1, 2, 3].forEach(i => setTimeout(() => beep(700 + i * 260, .18, 'triangle', .06, 900 + i * 260), i * 90));
+  cry('paraiso'); haptic('notificationOccurred', 'success');
+}
 function smashPipe(p) {
   p.broken = true; shake = Math.max(shake, 12);
   for (let i = 0; i < 26; i++) {
@@ -1379,7 +1507,7 @@ function showReady() {
   say('h', rnd(pool(sel.h, 'in')), 5000, false);
 }
 function startGame() {
-  state = 'playing'; readyEl.classList.add('hidden'); bird.vy = -(PT().flap || 7.4) + 0.2; playStart = performance.now(); bird.r = PT().hr || 13; invulnUntil = 0; revived = 0; shieldUsed = false; smashLeft = PT().smash || 0; debris = [];
+  state = 'playing'; readyEl.classList.add('hidden'); bird.vy = -(PT().flap || 7.4) + 0.2; playStart = performance.now(); bird.r = PT().hr || 13; invulnUntil = 0; revived = 0; shieldUsed = false; smashLeft = PT().smash || 0; debris = []; danceUntil = 0;
   const nowT = performance.now();
   setMode(pickMode()); lastMode = cur;
   FX.nextFlash = nowT + 2500; FX.nextMeteor = nowT + 2500; FX.gust.state = 0; FX.gust.next = nowT + 3500;
@@ -1664,6 +1792,8 @@ function update(dt) {
       if (p.amp) p.gapY = p.g0 + Math.sin(t * 0.035 + p.ph) * p.amp;
       if (!p.passed && p.x + PW < bird.x - bird.r) {
         p.passed = true; score++;
+        if (PT().pipeCoin) { runCoins += 1; WAL.c += 1; pops.push({ x: bird.x + 22, y: bird.y - 26, txt: '+1', life: 1, c: '#ffe28a' }); walSave(false); }
+        if (PT().dance && score % PT().dance === 0) startDance(nowMs);
         if ([5, 10, 15, 20, 30, 50].includes(score)) say('p', rnd(pool(sel.p, 'p')).replace(/\{n\}/g, score), 2200, true);
         beep(880, .12, 'triangle', .05, 300); haptic('impactOccurred', 'soft');
       }
@@ -1673,7 +1803,7 @@ function update(dt) {
     const r = bird.r - 2;
     if (bird.y + r >= H - GROUND) { bird.y = H - GROUND - r; die('ground'); }
     for (const p of pipes) {
-      if (p.broken) continue;
+      if (p.broken || nowMs < danceUntil) continue;
       const pi = PW * (1 - (PT().pw || 1)) / 2;
       if (bird.x + r > p.x + pi && bird.x - r < p.x + PW - pi &&
           (bird.y - r < p.gapY - p.gap / 2 || bird.y + r > p.gapY + p.gap / 2)) {
@@ -1697,6 +1827,7 @@ function update(dt) {
 
   for (const f of feathers) { f.x += f.vx * dt; f.y += f.vy * dt; f.vy += 0.18 * dt; f.vx *= 0.985; f.life -= 0.012 * dt; f.rot += 0.1 * dt; }
   feathers = feathers.filter(f => f.life > 0);
+  if (state === 'playing' && nowMs < danceUntil) FX.parts.push({ k: 'spark', x: bird.x - 10, y: bird.y + (Math.random() - .5) * 14, vx: -1 - Math.random() * 2, vy: (Math.random() - .5) * 2, life: 1, r: 2.4, c: RAINBOW[(Math.random() * 6) | 0] });
   for (const d of debris) { d.x += d.vx * dt; d.y += d.vy * dt; d.vy += 0.5 * dt; d.rot += d.vr * dt; d.life -= 0.012 * dt; }
   debris = debris.filter(d => d.life > 0 && d.y < H);
   for (const p of pops) { p.y -= 0.9 * dt; p.life -= 0.03 * dt; }
@@ -1773,8 +1904,13 @@ function drawGround() {
   }
 }
 function drawPlayer() {
-  const inv = performance.now() < invulnUntil;
-  drawChar(ctx, sel.p, bird.x, bird.y, { s: PL().ps, rot: bird.rot, w: Math.sin(bird.wing), m: bird.mouth, tt: t, a: inv && Math.floor(performance.now() / 80) % 2 ? 0.35 : 1 });
+  const inv = performance.now() < invulnUntil, dn = state === 'playing' && performance.now() < danceUntil;
+  if (dn) {
+    const g = ctx.createRadialGradient(bird.x, bird.y, 4, bird.x, bird.y, 52);
+    g.addColorStop(0, 'rgba(255,255,255,.6)'); g.addColorStop(.5, 'hsla(' + ((t * 9) % 360) + ',90%,60%,.4)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(bird.x, bird.y, 52, 0, 7); ctx.fill();
+  }
+  drawChar(ctx, sel.p, bird.x, bird.y, { s: PL().ps, rot: bird.rot + (dn ? Math.sin(t * 0.4) * 0.35 : 0), w: Math.sin(bird.wing), m: bird.mouth, tt: t, a: inv && Math.floor(performance.now() / 80) % 2 ? 0.35 : 1 });
 }
 function drawHinderer(front) {
   const ch = HI();
@@ -1903,7 +2039,7 @@ function drawWarning() {
 
 
 /* ====== ESPECIAL DE QUEM ATRAPALHA (distrações com aviso sonoro) ====== */
-const SP_SAY = { tucano: 'Fruta para todos!', picapau: 'Toc toc toc!', dodo: 'Abram alas para o dodo!', arara: 'Cá cá cá!', liberdade: 'Liberdade e fogo de artifício!', pato: 'QUACK QUACK!', mocho: 'Uuuh! Quem? Quem?', abutre: '*Cheira-me a carniça, caralho!', corvo: 'CRÁÁÁ!', ju: 'Sorri para a fotografia!', aguia: 'Apito final!', dragao: '*Toma lá fogo, carago!', fenix: 'Faíscas!', pomba: 'Paz e amor!', morcego: 'Iiiiih!', conde: 'A minha capa!', gaivota: 'Dá cá as moedas!', pelicano: 'Cuidado com o bico!', pavao: 'Admirem a cauda!', ptero: '*Rooaar, caralho!' };
+const SP_SAY = { tucano: 'Fruta para todos!', picapau: 'Toc toc toc!', dodo: 'Abram alas para o dodo!', arara: 'Cá cá cá!', liberdade: 'Liberdade e fogo de artifício!', pato: 'QUACK QUACK!', mocho: 'Uuuh! Quem? Quem?', abutre: '*Cheira-me a carniça, caralho!', corvo: 'CRÁÁÁ!', ju: 'Sorri para a fotografia!', aguia: 'Apito final!', dragao: '*Toma lá fogo, carago!', fenix: 'Faíscas!', pomba: 'Paz e amor!', morcego: 'Iiiiih!', conde: 'A minha capa!', gaivota: 'Dá cá as moedas!', pelicano: 'Cuidado com o bico!', pavao: 'Admirem a cauda!', ptero: '*Rooaar, caralho!', ana: 'Zzzzzzzz!', jorge: 'Pólen para todos!', rafa: 'Chegou o outono!', paraiso: 'Admirem a dança!' };
 FX.sp = []; FX.parts = [];
 function fireSpecial(now) {
   const id = sel.h; haptic('notificationOccurred', 'warning');
@@ -1933,6 +2069,10 @@ function fireSpecial(now) {
   if (id === 'gaivota') { cry('gaivota'); FX.sp.push({ k: 'steal', start: now, until: now + 2600 }); }
   if (id === 'pelicano') { cry('pelicano'); FX.sp.push({ k: 'dive', start: now, until: now + 1800 }); }
   if (id === 'pavao') { cry('pavao'); FX.sp.push({ k: 'fan', start: now, until: now + 2300 }); }
+  if (id === 'ana') { cry('ana'); FX.sp.push({ k: 'buzz', start: now, until: now + 2800, bats: Array.from({ length: 12 }, (_, i) => ({ x: W + 30 + i * 40, y: 60 + Math.random() * (H - GROUND - 140), v: 8 + Math.random() * 4, ph: Math.random() * 6 })) }); }
+  if (id === 'jorge') { cry('jorge'); FX.sp.push({ k: 'pollen', start: now, until: now + 3000 }); }
+  if (id === 'rafa') { cry('rafa'); FX.sp.push({ k: 'leaves', start: now, until: now + 3000 }); }
+  if (id === 'paraiso') { cry('paraiso'); FX.sp.push({ k: 'rainbow', start: now, until: now + 2800 }); }
   if (id === 'ptero') {
     cry('ptero'); for (let i = 0; i < 7; i++) setTimeout(() => { shake = Math.max(shake, 9); }, i * 200);
     FX.sp.push({ k: 'terror', start: now, until: now + 2600, b: Array.from({ length: 16 }, () => ({ x: 20 + Math.random() * 320, d: Math.random() * 0.5, c: PALETTE[(Math.random() * PALETTE.length) | 0], r: Math.random() * 6 })) });
@@ -1945,7 +2085,9 @@ function updateSpecials(now, dt) {
     if (e.k === 'breath') for (let i = 0; i < 3; i++) FX.parts.push({ k: 'fire', x: e.x, y: e.y, vx: -(6 + Math.random() * 4), vy: (Math.random() - .5) * 2.4, life: 1, r: 4 + Math.random() * 5 });
     if (e.k === 'embers') for (let i = 0; i < 1.3; i++) FX.parts.push({ k: 'ember', x: Math.random() * W, y: H - GROUND, vx: (Math.random() - .5) * 1.2, vy: -(1 + Math.random() * 2.2), life: 1, r: 1.5 + Math.random() * 2.5 });
     if (e.k === 'feathers' && Math.random() < 0.5) FX.parts.push({ k: 'feather', x: W + 10, y: Math.random() * (H - GROUND - 60), vx: -(1.5 + Math.random() * 1.5), vy: 0.5 + Math.random(), life: 1, r: 6 + Math.random() * 4, rot: Math.random() * 6 });
-    if (e.k === 'swarm') for (const b of e.bats) b.x -= b.v * dt;
+    if (e.k === 'swarm' || e.k === 'buzz') for (const b of e.bats) b.x -= b.v * dt;
+    if (e.k === 'leaves') for (let i = 0; i < 1.8; i++) FX.parts.push({ k: 'feather', x: W + 10, y: Math.random() * (H - GROUND - 40), vx: -(2 + Math.random() * 2.4), vy: 0.5, life: 1, r: 9 + Math.random() * 6, rot: Math.random() * 6, c: ['#e07b1a', '#c0392b', '#8d6e1f', '#6aa84f', '#d4a017'][(Math.random() * 5) | 0] });
+    if (e.k === 'rainbow' && Math.random() < 0.7) FX.parts.push({ k: 'feather', x: Math.random() * W, y: -10, vx: (Math.random() - .5) * 1.2, vy: 1, life: 1, r: 6 + Math.random() * 4, rot: Math.random() * 6, c: ['#ff8fc7', '#ffd23f', '#ff5a5a', '#fff'][(Math.random() * 4) | 0] });
     if (e.k === 'steal' && state === 'playing') {
       const gx = W + 50 - ((now - e.start) / (e.until - e.start)) * (W + 130);
       coins = coins.filter(c => { if (Math.abs(c.x - gx) < 34) { pops.push({ x: c.x, y: c.y, txt: '😈', life: 1, c: '#fff' }); return false; } return true; });
@@ -2031,7 +2173,8 @@ function drawSpecials() {
     } else if (e.k === 'fat') {
       drawChar(ctx, 'dodo', W + 160 - pr * (W + 420), 330, { s: 4.6, w: Math.sin(t * 0.12), m: 0, tt: t, a: 0.93, glow: false });
     } else if (e.k === 'steal') {
-      drawChar(ctx, 'gaivota', W + 50 - pr * (W + 130), 250 + Math.sin(pr * 12) * 40, { s: 2.4, w: Math.sin(t * 0.4), m: 0.6, tt: t, a: 0.95, glow: false, rot: -0.08 });
+      ctx.translate(W + 50 - pr * (W + 130), 250 + Math.sin(pr * 12) * 40); ctx.scale(-1, 1);
+      drawChar(ctx, 'gaivota', 0, 0, { s: 2.4, w: Math.sin(t * 0.4), m: 0.6, tt: t, a: 0.95, glow: false, rot: -0.08 });
     } else if (e.k === 'dive') {
       const y = -110 + Math.sin(Math.PI * pr) * 520;
       drawChar(ctx, 'pelicano', W * 0.55 + (pr - 0.5) * 70, y, { s: 4.4, w: Math.sin(t * 0.3), m: pr < 0.5 ? 0.9 : 0, tt: t, a: 0.92, glow: false, rot: pr < 0.5 ? 1.25 : -1.25 });
@@ -2047,11 +2190,26 @@ function drawSpecials() {
         ctx.fillStyle = '#0b2a4a'; ctx.beginPath(); ctx.arc(ex, ey, 7, 0, 7); ctx.fill();
       }
     } else if (e.k === 'terror') {
-      drawChar(ctx, 'ptero', W + 160 - pr * (W + 380), 150 + Math.sin(pr * 8) * 25, { s: 5.2, w: Math.sin(t * 0.22), m: 0.8, tt: t, a: 0.93, glow: false });
+      ctx.save(); ctx.translate(W + 160 - pr * (W + 380), 150 + Math.sin(pr * 8) * 25); ctx.scale(-1, 1);
+      drawChar(ctx, 'ptero', 0, 0, { s: 5.2, w: Math.sin(t * 0.22), m: 0.8, tt: t, a: 0.93, glow: false }); ctx.restore();
       for (const b of e.b) {
         const q = Math.max(0, pr - b.d); if (q <= 0) continue;
         ctx.save(); ctx.translate(b.x, -20 + q * q * (H + 60)); ctx.rotate(b.r + q * 6); ctx.fillStyle = b.c; ctx.fillRect(-14, -6, 28, 12); ctx.fillStyle = 'rgba(217,164,65,.85)'; ctx.fillRect(-8, -1.5, 16, 3); ctx.restore();
       }
+    } else if (e.k === 'buzz') {
+      e.bats.forEach(b => { ctx.save(); ctx.translate(b.x, b.y + Math.sin(t * 0.3 + b.ph) * 14); ctx.scale(-1, 1); drawChar(ctx, 'ana', 0, 0, { s: 1.5, w: Math.sin(t * 1.4 + b.ph), m: 0, tt: t, glow: false }); ctx.restore(); });
+    } else if (e.k === 'pollen') {
+      const al = Math.sin(Math.PI * Math.min(1, pr));
+      ctx.globalAlpha = 0.55 * al; ctx.fillStyle = '#ffd95a'; ctx.fillRect(0, 0, W, H);
+      ctx.globalAlpha = 0.9 * al; ctx.fillStyle = '#fff2a8';
+      for (let i = 0; i < 46; i++) { const x = (i * 53 + t * (1 + (i % 4))) % W, y = (i * 97 + Math.sin(t * 0.05 + i) * 30 + t * 0.4 * (1 + i % 3)) % H; ctx.beginPath(); ctx.arc(x, y, 2 + (i % 3) * 1.4, 0, 7); ctx.fill(); }
+      ctx.globalAlpha = 1; ctx.translate(W + 140 - pr * (W + 300), 220 + Math.sin(pr * 9) * 40); ctx.scale(-1, 1);
+      drawChar(ctx, 'jorge', 0, 0, { s: 4.2, w: Math.sin(t * 0.28), m: 0, tt: t, a: 0.9, glow: false });
+    } else if (e.k === 'rainbow') {
+      const al = Math.sin(Math.PI * Math.min(1, pr));
+      ctx.globalAlpha = 0.5 * al; ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H);
+      ctx.globalAlpha = 0.6 * al; ctx.lineWidth = 44;
+      RAINBOW.forEach((col, i) => { ctx.strokeStyle = col; ctx.beginPath(); ctx.arc(W / 2 + (pr - .5) * 60, H - GROUND + 120, 430 - i * 42, Math.PI, 0); ctx.stroke(); });
     } else if (e.k === 'stare') {
       const al = 0.7 * Math.sin(Math.PI * Math.min(1, pr));
       [W / 2 - 62, W / 2 + 62].forEach(ex => {
