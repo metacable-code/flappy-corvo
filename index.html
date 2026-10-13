@@ -52,6 +52,9 @@
   .card.dis { opacity:.3; }
   .pinfo { min-height:34px; margin:8px 0 2px; font-size:13px; line-height:1.35; opacity:.9; }
   .rv { color:#ff6b6b; font-weight:bold; font-size:14px; margin:4px 0 6px; }
+  .tabs { display:flex; gap:6px; justify-content:center; margin-bottom:6px; }
+  .tabs span { padding:3px 12px; border-radius:12px; background:rgba(255,255,255,.1); font-size:12px; cursor:pointer; }
+  .tabs span.on { background:var(--gold); color:#1a1030; font-weight:bold; }
   .hidden { display:none; }
 </style>
 </head>
@@ -785,9 +788,20 @@ function die() {
 }
 
 /* ====== TOP DE JOGADORES (precisa do servidor do bot) ====== */
-function renderTop(data) {
+function renderTop(data, which) {
+  which = which === 'grp' && data.group ? 'grp' : 'all';
+  const src = which === 'grp' ? data.group : data;
   topEl.textContent = '';
-  const h = document.createElement('div'); h.className = 'toph'; h.textContent = '🏆 TOP 10'; topEl.appendChild(h);
+  const h = document.createElement('div'); h.className = 'toph';
+  if (data.group) {
+    const tabs = document.createElement('div'); tabs.className = 'tabs';
+    [['all', '🌍 Geral'], ['grp', '👥 Grupo']].forEach(([k, label]) => {
+      const sp = document.createElement('span'); sp.textContent = label; if (k === which) sp.className = 'on';
+      sp.addEventListener('click', () => renderTop(data, k)); tabs.appendChild(sp);
+    });
+    topEl.appendChild(tabs);
+  }
+  h.textContent = which === 'grp' ? '🏆 TOP 10 DO GRUPO' : '🏆 TOP 10 GERAL'; topEl.appendChild(h);
   const medals = ['🥇', '🥈', '🥉'];
   const addRow = (pos, name, pts, me) => {
     const row = document.createElement('div'); row.className = 'row' + (me ? ' me' : '');
@@ -796,8 +810,8 @@ function renderTop(data) {
     const c = document.createElement('span'); c.className = 'pt'; c.textContent = pts;
     row.append(a, b, c); topEl.appendChild(row);
   };
-  (data.top || []).forEach((r, i) => addRow(medals[i] || (i + 1) + '.', r.name, r.score, r.me));
-  if (data.you && data.you.rank > 10) addRow('#' + data.you.rank, 'Tu', data.you.best, true);
+  (src.top || []).forEach((r, i) => addRow(medals[i] || (i + 1) + '.', r.name, r.score, r.me));
+  if (src.you && src.you.rank > 10) addRow('#' + src.you.rank, 'Tu', src.you.best, true);
   topEl.classList.remove('hidden');
 }
 async function submitScore() {
@@ -814,9 +828,14 @@ async function submitScore() {
       })
     });
     if (!res.ok) throw new Error(res.status);
-    renderTop(await res.json());
+    const data = await res.json();
+    try { localStorage.setItem('corvo_top', JSON.stringify(data)); } catch (e) {}
+    renderTop(data);
   } catch (e) {
-    topEl.textContent = 'Top indisponível (' + String((e && e.message) || 'erro') + ').';
+    let old = null;
+    try { old = JSON.parse(localStorage.getItem('corvo_top') || 'null'); } catch (e2) {}
+    if (old && old.top) { renderTop(old); const n = document.createElement('div'); n.className = 'toph'; n.style.opacity = '.6'; n.textContent = '(último top guardado — servidor sem resposta)'; topEl.appendChild(n); }
+    else topEl.textContent = 'Top indisponível (' + String((e && e.message) || 'erro') + ').';
   }
 }
 
@@ -876,7 +895,7 @@ document.getElementById('chg2').addEventListener('click', openPick);
 /* ====== INPUT ====== */
 stage.addEventListener('pointerdown', e => {
   unlockTTS();
-  if (e.target.closest('button, .card')) return;
+  if (e.target.closest('button, .card, .tabs')) return;
   if (state === 'pick') return;
   e.preventDefault();
   if (state === 'over') { if (performance.now() - overAt > 900) showReady(); return; }
