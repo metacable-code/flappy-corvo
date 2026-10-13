@@ -18,7 +18,7 @@
   .panel h1,.panel h2 { margin:0 0 8px; color:var(--gold); letter-spacing:1px; }
   .panel h1 { font-size:34px; } .panel h2 { font-size:26px; }
   .panel p { margin:6px 0 0; font-size:15px; opacity:.85; line-height:1.4; }
-  #ready { pointer-events:none; top:22%; }
+  #ready { pointer-events:none; top:27%; }
   #ready button { pointer-events:auto; }
   .picks { margin:10px 0 2px; font-size:15px; line-height:1.7; }
   .picks b { color:#fff; }
@@ -50,13 +50,21 @@
   .card span { display:block; font-size:11px; margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .card.sel { border-color:var(--gold); background:rgba(217,164,65,.2); }
   .card.dis { opacity:.3; }
-  .pinfo { min-height:64px; margin:8px 0 2px; font-size:12.5px; line-height:1.35; opacity:.9; white-space:pre-line; }
+  .pinfo { min-height:72px; margin:8px 0 2px; font-size:12.5px; line-height:1.35; opacity:.9; white-space:pre-line; }
   .rv { color:#ff6b6b; font-weight:bold; font-size:14px; margin:4px 0 6px; }
   .tabs { display:flex; gap:6px; justify-content:center; margin-bottom:6px; }
   .tabs span { flex:1; padding:5px 6px; white-space:nowrap; border-radius:12px; background:rgba(255,255,255,.1); font-size:12px; cursor:pointer; }
   .tabs span.on { background:var(--gold); color:#1a1030; font-weight:bold; }
   .dif { margin:6px 0 4px; font-size:15px; }
   .picks.small { font-size:12.5px; line-height:1.4; opacity:.85; white-space:pre-line; margin:4px 0; }
+  .card { position:relative; }
+  .card .pr { position:absolute; top:2px; right:2px; font-style:normal; font-size:10px; font-weight:bold; color:#ffd25a; background:rgba(10,6,24,.82); border-radius:8px; padding:1px 4px; }
+  .card .pr:empty { display:none; }
+  .card.lock canvas { filter:brightness(.45) grayscale(.5); }
+  #pick h2 { display:flex; justify-content:space-between; align-items:baseline; font-size:20px; padding:0 40px 0 4px; }
+  .wal { font-size:16px; color:#ffd25a; font-weight:bold; letter-spacing:0; }
+  #buy { background:#ffd25a; color:#1a1030; font-weight:bold; }
+  #buy.poor { background:rgba(255,255,255,.12); color:#efe9ff; border:1px solid rgba(255,255,255,.25); font-weight:normal; }
   .hidden { display:none; }
 </style>
 </head>
@@ -71,16 +79,17 @@
     <div id="rv" class="rv hidden">⚔️ Rivais! Abusos x10 e vale tudo.</div>
     <div class="picks small" id="tr"></div>
     <div class="dif">🎲 Dificuldade aleatória em cada voo!</div>
+    <div class="picks small" id="wl" style="color:#ffd25a"></div>
     <button id="change" class="btn2">🐦 Trocar pássaros</button>
     <div class="tap">Toca para voar</div>
   </div>
   <div id="pick" class="panel hidden">
-    <h2>Escolhe os pássaros</h2>
+    <h2><span>Escolhe os pássaros</span><span id="wal" class="wal"></span></h2>
     <div class="tabs" id="ptabs"><span data-r="p" class="on"></span><span data-r="h"></span></div>
     <div class="grid" id="gridP"></div>
     <div class="grid hidden" id="gridH"></div>
     <div class="pinfo" id="pinfo">Toca num pássaro para o escolher.</div>
-    <button id="pickok">Voar!</button>
+    <button id="buy" class="hidden"></button><button id="pickok">Voar!</button>
   </div>
   <div id="over" class="panel hidden">
     <h2>Fim de voo</h2>
@@ -89,6 +98,7 @@
       <div>Recorde<b id="bs">0</b></div>
     </div>
     <div class="picks" id="mi"></div>
+    <div class="picks" id="cn" style="color:#ffd25a"></div>
     <div id="top" class="top hidden"></div>
     <button id="again">Jogar outra vez</button>
     <button id="share" class="btn2">Partilhar</button>
@@ -134,6 +144,31 @@ function saveBest(v) {
   lsSet('corvo_best', v);
   if (cloudOK()) { try { tg.CloudStorage.setItem('corvo_best', String(v)); } catch (e) {} }
 }
+
+/* ====== CARTEIRA (moedas + pássaros comprados; v = versão, ganha a mais recente) ====== */
+const WAL = { c: 0, o: ['corvo'], v: 0 };
+function walParse(s) { try { const o = JSON.parse(s); if (o && typeof o.c === 'number' && Array.isArray(o.o)) return o; } catch (e) {} return null; }
+function walSave(cloud) {
+  WAL.v++;
+  const s = JSON.stringify(WAL);
+  try { localStorage.setItem('corvo_w', s); } catch (e) {}
+  if (cloud && cloudOK()) { try { tg.CloudStorage.setItem('corvo_w', s); } catch (e) {} }
+}
+function walLoad(cb) {
+  const l = walParse(lsGetS('corvo_w'));
+  if (l) Object.assign(WAL, l);
+  if (cloudOK()) {
+    try {
+      tg.CloudStorage.getItem('corvo_w', (err, v) => {
+        const c = walParse(v);
+        if (c && c.v > WAL.v) { Object.assign(WAL, c); try { localStorage.setItem('corvo_w', JSON.stringify(WAL)); } catch (e) {} if (cb) cb(); }
+      });
+    } catch (e) {}
+  }
+  return !!l;
+}
+window.addEventListener('pagehide', () => walSave(true));
+document.addEventListener('visibilitychange', () => { if (document.hidden) walSave(true); });
 
 /* ====== SOM ====== */
 let actx, muted = lsGet('corvo_muted') === 1;
@@ -864,6 +899,14 @@ const hadChoice = !!CHARS[sel.p];
 if (!CHARS[sel.p]) sel.p = 'corvo';
 let hSel = lsGetS('corvo_h');                       // 'rand' (sorteia em cada voo) ou o id de um pássaro
 if (hSel !== 'rand' && (!CHARS[hSel] || hSel === sel.p)) hSel = 'rand';
+
+/* ====== PREÇOS (quanto mais valioso o pássaro, mais caro) ====== */
+const PRICE = { corvo: 0, pomba: 30, pato: 55, mocho: 80, picapau: 110, tucano: 140, morcego: 170, abutre: 220, ju: 280, conde: 350, arara: 450, aguia: 600, dragao: 600, fenix: 900, liberdade: 1200, dodo: 2000 };
+const hadWallet = walLoad(() => { if (typeof refreshWallet === 'function') refreshWallet(); });
+if (!hadWallet) { [sel.p, hSel].forEach(i => { if (CHARS[i] && !WAL.o.includes(i)) WAL.o.push(i); }); walSave(false); } // quem já jogava mantém os seus
+const owns = id => WAL.o.includes(id);
+if (!owns(sel.p)) sel.p = 'corvo';
+if (hSel !== 'rand' && !owns(hSel)) hSel = 'rand';
 function rollH() {
   if (hSel !== 'rand') { sel.h = hSel; return; }
   const opts = ORDER.filter(i => i !== sel.p && i !== sel.h);
@@ -879,6 +922,7 @@ let state = 'ready', score = 0, best = 0, t = 0, scroll = 0, shake = 0, overAt =
 let playStart = 0, lastDur = 0;
 const bird = { x: 96, y: 330, vy: 0, rot: 0, r: 13, wing: 0, mouth: 0 };
 let pipes = [], feathers = [];
+let coins = [], pops = [], runCoins = 0;
 loadBest(v => { best = v; });
 
 /* ====== FALAS ====== */
@@ -1131,8 +1175,51 @@ function makePipe() {
   return { x: W + 40, gapY: g0, g0, amp, ph: Math.random() * 6, gap, passed: false, top: mkBooks(), bot: mkBooks() };
 }
 
+/* ====== MOEDAS: nas rotas entre torres, em arco, em zigue-zague e diamantes arriscados (valem 5) ====== */
+function spawnCoins(a, b) {
+  const x0 = a.x + PW / 2, d = (b.x + PW / 2) - x0, y0 = a.g0, y1 = b.g0;
+  const lo = 64, hi = H - GROUND - 40;
+  const add = (f, dy, v) => coins.push({ x: x0 + d * f, y: Math.max(lo, Math.min(hi, y0 + (y1 - y0) * f + dy)), v: v || 1, ph: Math.random() * 6 });
+  const r = Math.random();
+  if (r < 0.5) { [0.3, 0.5, 0.7].forEach(f => add(f, 0)); }
+  else if (r < 0.75) { for (let i = 0; i < 5; i++) { const f = 0.24 + i * 0.13; add(f, -Math.sin(i / 4 * Math.PI) * 38); } }
+  else { [0.26, 0.42, 0.58, 0.74].forEach((f, i) => add(f, i % 2 ? 24 : -24)); }
+  if (Math.random() < 0.28) coins.push({ x: x0 + d * 0.5, y: Math.random() < 0.5 ? 62 + Math.random() * 40 : hi - Math.random() * 40, v: 5, ph: Math.random() * 6 });
+}
+function takeCoin(c) {
+  runCoins += c.v; WAL.c += c.v; walSave(false);
+  pops.push({ x: c.x, y: c.y, txt: '+' + c.v, life: 1, c: c.v > 1 ? '#7ff0ff' : '#ffd25a' });
+  beep(c.v > 1 ? 1500 : 1150, .07, 'square', .04, c.v > 1 ? 2300 : 1800); haptic('impactOccurred', 'light');
+}
+function drawCoinIcon(x, y, r) {
+  ctx.fillStyle = '#ffd25a'; ctx.strokeStyle = '#b57a10'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#f0a91c'; ctx.beginPath(); ctx.arc(x, y, r * 0.58, 0, 7); ctx.fill();
+}
+function drawCoins() {
+  for (const c of coins) {
+    const bob = Math.sin(t * 0.08 + c.ph) * 3, sx = Math.max(0.2, Math.abs(Math.cos(t * 0.07 + c.ph)));
+    ctx.save(); ctx.translate(c.x, c.y + bob);
+    if (c.v > 1) {
+      const g = ctx.createRadialGradient(0, 0, 2, 0, 0, 22);
+      g.addColorStop(0, 'rgba(127,240,255,.5)'); g.addColorStop(1, 'rgba(127,240,255,0)');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, 22, 0, 7); ctx.fill();
+      ctx.scale(Math.max(0.35, sx), 1);
+      ctx.fillStyle = '#7ff0ff'; ctx.strokeStyle = '#1a8fb0'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(0, -13); ctx.lineTo(10, -3); ctx.lineTo(0, 13); ctx.lineTo(-10, -3); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = 'rgba(255,255,255,.7)'; ctx.beginPath(); ctx.moveTo(0, -11); ctx.lineTo(5, -3); ctx.lineTo(0, -3); ctx.lineTo(-5, -3); ctx.closePath(); ctx.fill();
+    } else {
+      ctx.scale(sx, 1); drawCoinIcon(0, 0, 9);
+    }
+    ctx.restore();
+  }
+  ctx.save(); ctx.font = 'bold 15px Georgia, serif'; ctx.textAlign = 'center'; ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(10,6,24,.9)';
+  for (const p of pops) { ctx.globalAlpha = Math.max(0, p.life); ctx.strokeText(p.txt, p.x, p.y); ctx.fillStyle = p.c; ctx.fillText(p.txt, p.x, p.y); }
+  ctx.restore();
+}
+
 function resetGame() {
-  score = 0; pipes = []; feathers = []; scroll = 0; newBest = false; resetFx();
+  score = 0; pipes = []; feathers = []; coins = []; pops = []; runCoins = 0; scroll = 0; newBest = false; resetFx();
   bird.y = 330; bird.vy = 0; bird.rot = 0; bird.wing = 0;
 }
 function showReady() {
@@ -1142,6 +1229,7 @@ function showReady() {
   pickEl.classList.add('hidden'); overEl.classList.add('hidden'); readyEl.classList.remove('hidden');
   document.getElementById('pn').textContent = PL().emoji + ' ' + PL().name;
   document.getElementById('hn').textContent = (hSel === 'rand' ? '🎲 ' : '') + HI().emoji + ' ' + HI().name;
+  refreshWallet();
   document.getElementById('tr').textContent = '⭐ ' + PL().name + ': ' + TRAITS[sel.p].t + '\n😈 ' + HI().name + ': ' + TRAITS[sel.h].sp;
   HD.next = Infinity; HD.bombing = false; HD.replyAt = 0; HD.shove = 0; HD.spAt = Infinity;
   setMode('normal');
@@ -1193,6 +1281,7 @@ function die(cause) {
   const fc = PL().pc;
   for (let i = 0; i < 14; i++) feathers.push({ x: bird.x, y: bird.y, vx: (Math.random() - .5) * 7, vy: (Math.random() - .8) * 6, life: 1, rot: Math.random() * 6, c: fc });
   stopSpeech(); SP.h.text = null; HD.replyAt = 0; HD.bombing = false; HD.shove = 0;
+  walSave(true);
   cry(sel.p); cawUntil = performance.now() + 1150;
   clearTimeout(deathTimer);
   deathTimer = setTimeout(() => {
@@ -1206,6 +1295,7 @@ function die(cause) {
     document.getElementById('sc').textContent = score;
     document.getElementById('mi').textContent = cur === 'normal' ? '' : 'Dificuldade: ' + curLabel();
     document.getElementById('bs').textContent = best + (newBest ? ' ★' : '');
+    document.getElementById('cn').textContent = '🪙 ' + (runCoins ? '+' + runCoins + ' · ' : '') + 'total ' + WAL.c;
     overEl.classList.remove('hidden');
     submitScore();
   }, 650);
@@ -1289,14 +1379,16 @@ function buildPick() {
       const card = document.createElement('div'); card.className = 'card'; card.dataset.id = id; card.dataset.role = role;
       const cvs = document.createElement('canvas'); cvs.width = 240; cvs.height = 184;
       const lab = document.createElement('span'); lab.textContent = CHARS[id].name;
-      card.append(cvs, lab); grid.appendChild(card);
-      thumbs.push({ id, role, i, c: cvs.getContext('2d'), card });
+      const pr = document.createElement('i'); pr.className = 'pr';
+      card.append(cvs, lab, pr); grid.appendChild(card);
+      thumbs.push({ id, role, i, c: cvs.getContext('2d'), card, pr });
       card.addEventListener('click', () => choose(role, id));
     });
   });
   document.querySelectorAll('#ptabs span').forEach(sp => sp.addEventListener('click', () => setTab(sp.dataset.r)));
 }
 function choose(role, id) {
+  if (id !== 'rand' && !owns(id)) { lastPicked = id; refreshPick(); return; } // bloqueado: mostra o preço
   if (role === 'p') { if (hSel === id) hSel = 'rand'; sel.p = id; }
   else { if (id !== 'rand' && sel.p === id) return; hSel = id; }
   lastPicked = id; rollH(); refreshPick();
@@ -1305,7 +1397,11 @@ function refreshPick() {
   for (const th of thumbs) {
     th.card.classList.toggle('sel', th.role === 'p' ? sel.p === th.id : hSel === th.id);
     th.card.classList.toggle('dis', th.role === 'p' ? hSel === th.id : sel.p === th.id);
+    const lk = !owns(th.id);
+    th.card.classList.toggle('lock', lk);
+    th.pr.textContent = lk ? '🪙' + PRICE[th.id] : '';
   }
+  refreshWallet();
   if (randCard) randCard.classList.toggle('sel', hSel === 'rand');
   const tabs = document.querySelectorAll('#ptabs span');
   tabs[0].textContent = '🕊️ Tu voas: ' + PL().name;
@@ -1314,10 +1410,32 @@ function refreshPick() {
   if (lastPicked === 'rand') txt = '🎲 Aleatório — em cada voo é sorteado quem te atrapalha.';
   else {
     const ch = CHARS[lastPicked] || PL(), tr = TRAITS[ch.id];
-    txt = ch.emoji + ' ' + ch.name + ' — ' + ch.bio + '\n⭐ A voar: ' + tr.t + '\n😈 A atrapalhar: ' + tr.sp + (hSel !== 'rand' && rv() ? '\n⚔️ Rivais! Abusos x10 e vale tudo.' : '');
+    txt = ch.emoji + ' ' + ch.name + ' — ' + ch.bio + (owns(ch.id) ? '' : '\n🔒 Bloqueado: custa 🪙' + PRICE[ch.id]) + '\n⭐ A voar: ' + tr.t + '\n😈 A atrapalhar: ' + tr.sp + (hSel !== 'rand' && rv() ? '\n⚔️ Rivais! Abusos x10 e vale tudo.' : '');
   }
   document.getElementById('pinfo').textContent = txt;
 }
+function refreshWallet() {
+  const w = document.getElementById('wal'); if (w) w.textContent = '🪙 ' + WAL.c;
+  const buy = document.getElementById('buy');
+  if (buy) {
+    const id = lastPicked, lk = id && id !== 'rand' && CHARS[id] && !owns(id);
+    buy.classList.toggle('hidden', !lk);
+    if (lk) {
+      const need = PRICE[id] - WAL.c;
+      buy.textContent = need <= 0 ? 'Comprar 🪙' + PRICE[id] : 'Faltam 🪙' + need;
+      buy.classList.toggle('poor', need > 0);
+    }
+  }
+  const wl = document.getElementById('wl'); if (wl) wl.textContent = '🪙 ' + WAL.c + ' moedas';
+}
+document.getElementById('buy').addEventListener('click', () => {
+  const id = lastPicked;
+  if (!CHARS[id] || owns(id)) return;
+  if (WAL.c < PRICE[id]) { beep(200, .18, 'sawtooth', .05, 120); haptic('notificationOccurred', 'error'); return; }
+  WAL.c -= PRICE[id]; WAL.o.push(id); walSave(true);
+  beep(660, .1, 'triangle', .06, 990); setTimeout(() => beep(990, .2, 'triangle', .06, 1320), 110); haptic('notificationOccurred', 'success');
+  choose(pickTab, id);
+});
 function drawThumbs() {
   for (const th of thumbs) {
     if (th.role !== pickTab) continue;
@@ -1391,7 +1509,11 @@ function update(dt) {
     bird.rot = Math.max(-0.5, Math.min(1.2, bird.vy * 0.075));
     if (bird.y - bird.r < 0) { bird.y = bird.r; bird.vy = 0; }
 
-    if (!pipes.length || pipes[pipes.length - 1].x <= W - (on('turbo') ? 208 : 160)) pipes.push(makePipe());
+    if (!pipes.length || pipes[pipes.length - 1].x <= W - (on('turbo') ? 208 : 160)) {
+      const np = makePipe(), pr = pipes[pipes.length - 1];
+      pipes.push(np); if (pr) spawnCoins(pr, np);
+    }
+    for (const c of coins) c.x -= speed * dt;
     for (const p of pipes) {
       p.x -= speed * dt;
       if (p.amp) p.gapY = p.g0 + Math.sin(t * 0.035 + p.ph) * p.amp;
@@ -1410,6 +1532,12 @@ function update(dt) {
       if (bird.x + r > p.x + pi && bird.x - r < p.x + PW - pi &&
           (bird.y - r < p.gapY - p.gap / 2 || bird.y + r > p.gapY + p.gap / 2)) { die('pipe'); break; }
     }
+    if (state === 'playing') {
+      coins = coins.filter(c => {
+        if (Math.hypot(c.x - bird.x, c.y - bird.y) < bird.r + (c.v > 1 ? 13 : 11)) { takeCoin(c); return false; }
+        return c.x > -20;
+      });
+    }
   } else if (state === 'over') {
     bird.vy = Math.min(bird.vy + 0.5 * dt, 12);
     bird.y += bird.vy * dt;
@@ -1420,6 +1548,8 @@ function update(dt) {
 
   for (const f of feathers) { f.x += f.vx * dt; f.y += f.vy * dt; f.vy += 0.18 * dt; f.vx *= 0.985; f.life -= 0.012 * dt; f.rot += 0.1 * dt; }
   feathers = feathers.filter(f => f.life > 0);
+  for (const p of pops) { p.y -= 0.9 * dt; p.life -= 0.03 * dt; }
+  pops = pops.filter(p => p.life > 0);
   if (shake > 0) shake = Math.max(0, shake - 0.6 * dt);
 }
 
@@ -1537,6 +1667,12 @@ function drawScore() {
   ctx.font = 'bold 54px Georgia, serif'; ctx.textAlign = 'center'; ctx.lineWidth = 6; ctx.lineJoin = 'round';
   ctx.strokeStyle = 'rgba(10,6,24,.9)'; ctx.strokeText(score, W / 2, 96);
   ctx.fillStyle = '#fff'; ctx.fillText(score, W / 2, 96);
+  // contador de moedas (canto superior esquerdo)
+  drawCoinIcon(24, 28, 10);
+  ctx.font = 'bold 22px Georgia, serif'; ctx.textAlign = 'left'; ctx.lineWidth = 4;
+  ctx.strokeStyle = 'rgba(10,6,24,.9)'; ctx.strokeText(WAL.c, 40, 36);
+  ctx.fillStyle = '#ffd25a'; ctx.fillText(WAL.c, 40, 36);
+  ctx.textAlign = 'center';
 }
 
 /* ====== ESTÁDIOS (águia e dragão têm o seu campo) ====== */
@@ -1846,6 +1982,7 @@ function draw() {
   if (state !== 'pick') {
     if (!hdFront()) drawHinderer(false);
     for (const p of pipes) drawPipe(p);
+    drawCoins();
     if (th) drawGroundStadium(); else drawGround();
     drawFeathers();
     drawPlayer();
