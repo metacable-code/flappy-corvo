@@ -65,12 +65,16 @@
   .wal { font-size:15px; color:#ffd25a; font-weight:bold; letter-spacing:0; }
   #buy { background:#ffd25a; color:#1a1030; font-weight:bold; }
   #buy.poor { background:rgba(255,255,255,.12); color:#efe9ff; border:1px solid rgba(255,255,255,.25); font-weight:normal; }
+  #godbar { position:absolute; top:10px; left:10px; z-index:6; display:flex; align-items:center; gap:2px; background:rgba(14,9,30,.7); border:1px solid rgba(255,210,90,.5); border-radius:20px; padding:2px 4px; }
+  #godbar button { padding:6px 12px; margin:0; background:transparent; color:#ffd25a; font-size:18px; }
+  #godbar span { font-size:13px; color:#ffe9a8; min-width:74px; text-align:center; }
   .hidden { display:none; }
 </style>
 </head>
 <body>
 <div id="stage">
   <canvas id="c"></canvas>
+  <div id="godbar" class="hidden"><button id="gprev">◀</button><span id="godlb"></span><button id="gnext">▶</button></div>
   <button id="mute" aria-label="Som">🔊</button>
   <div id="ready" class="panel">
     <h1>Flappy Corvo</h1>
@@ -257,6 +261,7 @@ const CRY = {
     ...[0, .12, .24, .36].map((at, i) => ({ at, d: .45, ty: 'sine', f0: 900 + i * 300, f1: 1200 + i * 300, lf: 8, ld: 20, v: .5 })),
     { at: .55, d: .35, ty: 'square', f0: 1100, f1: 700, lf: 30, ld: 120, b0: 1800, b1: 1100, q: 3, v: .3 }]
 };
+CRY.god = CRY.paraiso;
 function cry(id) {
   if (muted) return;
   try {
@@ -1108,8 +1113,13 @@ DRAW.rafa = function (c, w, m, tt) {
   c.restore();
 };
 
+CHARS.god = Object.assign({}, CHARS.paraiso, { name: 'Deus', emoji: '⚡', bio: 'Modo Deus: só para o José testar as etapas.', col: '#fff3b0', pc: '#ffe27a', gl: [255, 240, 150, .45] });
+DRAW.god = function (c, w, m, tt) {
+  c.save(); c.strokeStyle = 'rgba(255,240,150,.9)'; c.lineWidth = 2; c.beginPath(); ell(c, 0, -26, 12, 4, 0); c.stroke(); c.restore();
+  DRAW.paraiso(c, w, m, tt);
+};
 const ORDER = ['corvo', 'ju', 'aguia', 'liberdade', 'dragao', 'fenix', 'pomba', 'morcego', 'conde', 'pato', 'mocho', 'abutre', 'tucano', 'picapau', 'dodo', 'arara', 'gaivota', 'pelicano', 'pavao', 'ptero', 'ana', 'jorge', 'rafa', 'paraiso'];
-for (const id of ORDER) { CHARS[id].id = id; CHARS[id].draw = DRAW[id]; }
+for (const id of ORDER.concat(['god'])) { CHARS[id].id = id; CHARS[id].draw = DRAW[id]; }
 
 function drawChar(c, id, x, y, o) {
   const ch = CHARS[id];
@@ -1133,15 +1143,16 @@ const pickEl = document.getElementById('pick');
 const topEl = document.getElementById('top');
 const sel = { p: lsGetS('corvo_p'), h: '' };
 const hadChoice = !!CHARS[sel.p];
-if (!CHARS[sel.p]) sel.p = 'corvo';
+if (!CHARS[sel.p] || sel.p === 'god') sel.p = 'corvo';
 let hSel = lsGetS('corvo_h');                       // 'rand' (sorteia em cada voo) ou o id de um pássaro
-if (hSel !== 'rand' && (!CHARS[hSel] || hSel === sel.p)) hSel = 'rand';
+if (hSel !== 'rand' && (!CHARS[hSel] || hSel === sel.p || hSel === 'god')) hSel = 'rand';
 
 /* ====== PREÇOS (quanto mais valioso o pássaro, mais caro) ====== */
 const PRICE = { corvo: 0, pomba: 30, pato: 55, mocho: 80, picapau: 110, tucano: 140, morcego: 170, abutre: 220, ju: 280, conde: 350, arara: 450, aguia: 600, dragao: 600, fenix: 900, liberdade: 1200, dodo: 2000, gaivota: 250, pelicano: 800, pavao: 3000, ptero: 5000, rafa: 40, jorge: 380, ana: 1500, paraiso: 10000 };
 const hadWallet = walLoad(() => { if (typeof refreshWallet === 'function') refreshWallet(); });
 if (!hadWallet) { [sel.p, hSel].forEach(i => { if (CHARS[i] && !WAL.o.includes(i)) WAL.o.push(i); }); walSave(false); } // quem já jogava mantém os seus
-const owns = id => WAL.o.includes(id);
+const GOD = () => sel.p === 'god';
+const owns = id => WAL.o.includes(id) || (id === 'god' && sel.p === 'god');
 if (!owns(sel.p)) sel.p = 'corvo';
 if (hSel !== 'rand' && !owns(hSel)) hSel = 'rand';
 function rollH() {
@@ -1314,6 +1325,7 @@ const TRAITS = {
   rafa:    { grav: 0.26, flap: 5.9, windK: 1.8, hr: 10, t: 'Folha ao vento: cai como uma folha, mas o vento empurra-a muito mais.', sp: 'Outono: chuva de folhas a tapar-te a vista.' },
   paraiso: { magnet: 55, pipeCoin: 1, dance: 15, t: 'Penas de ouro: +1 moeda por torre. Aura de moedas. A cada 15 pontos dança 3 s e atravessa os livros.', sp: 'Deslumbre: arco-íris e pétalas a cobrir o ecrã.' },
   arara:   { t: 'Papagaio: copia a característica de quem te atrapalha!', sp: 'Penas coloridas: chuva de penas e gritos.' },
+  god:     { hr: 9, noscore: 1, t: 'MODO DEUS: invencível, sem pontos, sem moedas e fora do top. Usa ◀ ▶ para saltar de etapa.', sp: '—' },
   conde:   { calm: 2, t: 'Hipnose: quem te atrapalha faz tudo metade das vezes.', sp: 'Capa: cobre-te o ecrã por instantes.' }
 };
 const PT = () => sel.p === 'arara' ? Object.assign({}, TRAITS[sel.h] || {}, { copy: 1, coinX: 1, dance: 0, pipeCoin: 0 }) : TRAITS[sel.p];
@@ -1491,9 +1503,9 @@ function smashPipe(p) {
   FX.banner = { text: '🦖 CRASH! ' + (smashLeft ? smashLeft + (smashLeft === 1 ? ' pilha restante' : ' pilhas restantes') : 'Última pilha!'), until: performance.now() + 1600 };
 }
 function takeCoin(c) {
-  const v = c.v * (PT().coinX || 1);
-  runCoins += v; WAL.c += v; walSave(false);
-  pops.push({ x: c.x, y: c.y, txt: '+' + v, life: 1, c: c.v > 1 ? '#7ff0ff' : '#ffd25a' });
+  const v = GOD() ? 0 : c.v * (PT().coinX || 1);
+  if (v) { runCoins += v; WAL.c += v; walSave(false); }
+  pops.push({ x: c.x, y: c.y, txt: GOD() ? '🪙' : '+' + v, life: 1, c: c.v > 1 ? '#7ff0ff' : '#ffd25a' });
   beep(c.v > 1 ? 1500 : 1150, .07, 'square', .04, c.v > 1 ? 2300 : 1800); haptic('impactOccurred', 'light');
 }
 function drawDebris() {
@@ -1572,7 +1584,7 @@ function switchStage(n) {
   pipes = []; coins = []; debris = []; pops = []; feathers = []; FX.parts = []; FX.sp = []; FX.meteors = []; FX.flash = 0; FX.bolt = null;
   scroll = 0; bird.x = 96; bird.y = FLOOR * 0.5; bird.vy = 0; bird.rot = 0; invulnUntil = 0; danceUntil = 0;
   HD.fx = bird.x + 196; HD.fy = bird.y - 30; setMode('normal');
-  rest.cy = FLOOR * 0.5;
+  if (rest) rest.cy = FLOOR * 0.5;
 }
 function updateRest(now, dt) {
   if (rest.ph === 'out') {
@@ -1595,6 +1607,18 @@ function resumeStage() {
   rest = null; invulnUntil = nowT + 1400; armMode(nowT);
   HD.spAt = nowT + 7000; HD.shoveAt = nowT + 7000; HD.next = nowT + 4000; HD.nextBomb = nowT + 8000; HD.bombing = false; HD.shove = 0;
   say('p', rnd(pool(sel.p, 'rd')), 2200, true);
+}
+function godJump(d) {
+  if (!GOD() || state !== 'playing') return;
+  const n = Math.max(0, stageN + d);
+  rest = null; switchStage(n); score = n * 50; resumeStage();
+  invulnUntil = performance.now() + 1e9;
+}
+function godUI() {
+  const el = document.getElementById('godbar'); if (!el) return;
+  const on = GOD() && (state === 'playing' || state === 'ready');
+  el.classList.toggle('hidden', !on);
+  if (on) document.getElementById('godlb').textContent = '⚡ Etapa ' + (stageN + 1);
 }
 function startGame() {
   state = 'playing'; readyEl.classList.add('hidden'); rest = null; bird.vy = -(PT().flap || 7.4) + 0.2; playStart = performance.now(); bird.r = PT().hr || 13; invulnUntil = 0; revived = 0; shieldUsed = false; smashLeft = PT().smash || 0; debris = []; danceUntil = 0;
@@ -1621,7 +1645,7 @@ function reviveNow(now) {
 function die(cause) {
   if (state !== 'playing') return;
   const nowD = performance.now();
-  if (nowD < invulnUntil || rest) { bird.vy = Math.min(bird.vy, -5); return; }
+  if (nowD < invulnUntil || rest || GOD()) { bird.vy = Math.min(bird.vy, -5); return; }
   if (PT().shield && !shieldUsed && cause !== 'ground') {
     shieldUsed = true; invulnUntil = nowD + 1500; bird.vy = -6;
     for (let i = 0; i < 24; i++) FX.parts.push({ k: 'spark', w: 1, x: bird.x, y: bird.y, vx: (Math.random() - .5) * 8, vy: (Math.random() - .5) * 8, life: 1, r: 2.4, c: ['#6fa8ff', '#fff', '#ff6b6b'][i % 3] });
@@ -1635,7 +1659,7 @@ function die(cause) {
   const fc = PL().pc;
   for (let i = 0; i < 14; i++) feathers.push({ x: bird.x, y: bird.y, vx: (Math.random() - .5) * 7, vy: (Math.random() - .8) * 6, life: 1, rot: Math.random() * 6, c: fc });
   stopSpeech(); SP.h.text = null; HD.replyAt = 0; HD.bombing = false; HD.shove = 0;
-  walSave(true);
+  if (!GOD()) walSave(true);
   cry(sel.p); cawUntil = performance.now() + 1150;
   clearTimeout(deathTimer);
   deathTimer = setTimeout(() => {
@@ -1644,14 +1668,14 @@ function die(cause) {
   clearTimeout(gloatTimer);
   if (rv()) gloatTimer = setTimeout(() => say('h', rnd(pool(sel.h, 'xw')), 2600, false), 3000);
   haptic('notificationOccurred', 'error');
-  if (score > best) { best = score; newBest = true; saveBest(best); }
+  if (!GOD() && score > best) { best = score; newBest = true; saveBest(best); }
   setTimeout(() => {
     document.getElementById('sc').textContent = score;
     document.getElementById('mi').textContent = cur === 'normal' ? '' : 'Dificuldade: ' + curLabel();
     document.getElementById('bs').textContent = best + (newBest ? ' ★' : '');
     document.getElementById('cn').textContent = '🪙 ' + (runCoins ? '+' + runCoins + ' · ' : '') + 'total ' + WAL.c;
     overEl.classList.remove('hidden');
-    submitScore();
+    if (GOD()) { topEl.textContent = 'Modo Deus: não conta para o top.'; topEl.classList.remove('hidden'); } else submitScore();
   }, 650);
 }
 
@@ -1842,7 +1866,7 @@ window.addEventListener('keydown', e => {
 
 /* ====== LÓGICA ====== */
 function update(dt) {
-  t += dt;
+  t += dt; godUI();
   const nowMs = performance.now();
   if (isTalking('p') || nowMs < cawUntil) bird.mouth = 0.5 + 0.5 * Math.sin(nowMs * 0.03); else bird.mouth *= 0.7;
   if (SP.p.text && nowMs >= SP.p.until) SP.p.text = null;
@@ -2597,6 +2621,20 @@ function frame(now) {
 }
 requestAnimationFrame(frame);
 if (hadChoice) showReady(); else openPick();
+
+/* ====== MODO DEUS (escondido: toca 7x nas moedas do ecrã de escolha) ====== */
+(function () {
+  let taps = 0, last = 0, prev = 'corvo';
+  document.getElementById('wal').addEventListener('click', () => {
+    const n = performance.now(); taps = (n - last < 900) ? taps + 1 : 1; last = n;
+    if (taps < 7) return; taps = 0;
+    if (GOD()) { sel.p = prev; if (hSel === sel.p) hSel = 'rand'; lastPicked = sel.p; }
+    else { prev = sel.p; sel.p = 'god'; if (hSel === 'god') hSel = 'rand'; lastPicked = 'god'; }
+    rollH(); refreshPick(); beep(1200, .15, 'triangle', .06, 600); haptic('notificationOccurred', 'success');
+  });
+  document.getElementById('gprev').addEventListener('click', () => godJump(-1));
+  document.getElementById('gnext').addEventListener('click', () => godJump(1));
+})();
 
 </script>
 </body>
