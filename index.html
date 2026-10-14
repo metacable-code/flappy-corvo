@@ -2018,56 +2018,61 @@ function die(cause) {
 }
 
 /* ====== TOP DE JOGADORES (precisa do servidor do bot) ====== */
-function renderTop(data, which) {
+function renderTop(data, which, o) {
+  o = o || {}; const el = o.el || topEl, unit = o.unit || '', label = o.label || 'TOP 10';
   which = which === 'grp' && data.group ? 'grp' : 'all';
   const src = which === 'grp' ? data.group : data;
-  topEl.textContent = '';
+  el.textContent = '';
   const h = document.createElement('div'); h.className = 'toph';
   if (data.group) {
     const tabs = document.createElement('div'); tabs.className = 'tabs';
-    [['all', '🌍 Geral'], ['grp', '👥 Grupo']].forEach(([k, label]) => {
-      const sp = document.createElement('span'); sp.textContent = label; if (k === which) sp.className = 'on';
-      sp.addEventListener('click', () => renderTop(data, k)); tabs.appendChild(sp);
+    [['all', '🌍 Geral'], ['grp', '👥 Grupo']].forEach(([k, lb]) => {
+      const sp = document.createElement('span'); sp.textContent = lb; if (k === which) sp.className = 'on';
+      sp.addEventListener('click', () => renderTop(data, k, o)); tabs.appendChild(sp);
     });
-    topEl.appendChild(tabs);
+    el.appendChild(tabs);
   }
-  h.textContent = which === 'grp' ? '🏆 TOP 10 DO GRUPO' : '🏆 TOP 10 GERAL'; topEl.appendChild(h);
+  h.textContent = '🏆 ' + label + (which === 'grp' ? ' DO GRUPO' : ' GERAL'); el.appendChild(h);
   const medals = ['🥇', '🥈', '🥉'];
   const addRow = (pos, name, pts, me) => {
     const row = document.createElement('div'); row.className = 'row' + (me ? ' me' : '');
     const a = document.createElement('span'); a.textContent = pos;
     const b = document.createElement('span'); b.className = 'nm'; b.textContent = name;
-    const c = document.createElement('span'); c.className = 'pt'; c.textContent = pts;
-    row.append(a, b, c); topEl.appendChild(row);
+    const c = document.createElement('span'); c.className = 'pt'; c.textContent = pts + unit;
+    row.append(a, b, c); el.appendChild(row);
   };
   (src.top || []).forEach((r, i) => addRow(medals[i] || (i + 1) + '.', r.name, r.score, r.me));
+  if (!(src.top || []).length) { const e = document.createElement('div'); e.style.textAlign = 'center'; e.style.opacity = '.7'; e.textContent = 'Ainda ninguém jogou. Sê o primeiro!'; el.appendChild(e); }
   if (src.you && src.you.rank > 10) addRow('#' + src.you.rank, 'Tu', src.you.best, true);
-  topEl.classList.remove('hidden');
+  el.classList.remove('hidden');
 }
-async function submitScore() {
+// game: 'flappy' | 'atira'; score 0 = só ver o top
+async function submitGame(game, score, dur, o) {
+  o = o || {}; const el = o.el || topEl;
   if (!CONFIG.apiUrl) return;
-  topEl.classList.remove('hidden');
-  if (!tg || !tg.initData) { topEl.textContent = 'Abre o jogo pelo Telegram para ver o top.'; return; }
-  topEl.textContent = 'A carregar o top…';
+  el.classList.remove('hidden');
+  if (!tg || !tg.initData) { el.textContent = 'Abre o jogo pelo Telegram para ver o top.'; return; }
+  el.textContent = 'A carregar o top…';
   try {
     const res = await fetch(CONFIG.apiUrl.replace(/\/$/, '') + '/api/score', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        initData: tg.initData, score: score, dur: Math.round(lastDur),
+        initData: tg.initData, score: score, dur: Math.round(dur), game: game,
         chat: (tg.initDataUnsafe && tg.initDataUnsafe.start_param) || ''
       })
     });
     if (!res.ok) throw new Error(res.status);
     const data = await res.json();
-    try { localStorage.setItem('corvo_top', JSON.stringify(data)); } catch (e) {}
-    renderTop(data);
+    try { localStorage.setItem(game === 'flappy' ? 'corvo_top' : 'corvo_top_' + game, JSON.stringify(data)); } catch (e) {}
+    renderTop(data, undefined, o);
   } catch (e) {
     let old = null;
-    try { old = JSON.parse(localStorage.getItem('corvo_top') || 'null'); } catch (e2) {}
-    if (old && old.top) { renderTop(old); const n = document.createElement('div'); n.className = 'toph'; n.style.opacity = '.6'; n.textContent = '(último top guardado — servidor sem resposta)'; topEl.appendChild(n); }
-    else topEl.textContent = 'Top indisponível (' + String((e && e.message) || 'erro') + ').';
+    try { old = JSON.parse(localStorage.getItem(game === 'flappy' ? 'corvo_top' : 'corvo_top_' + game) || 'null'); } catch (e2) {}
+    if (old && old.top) { renderTop(old, undefined, o); const n = document.createElement('div'); n.className = 'toph'; n.style.opacity = '.6'; n.textContent = '(último top guardado — servidor sem resposta)'; el.appendChild(n); }
+    else el.textContent = 'Top indisponível (' + String((e && e.message) || 'erro') + ').';
   }
 }
+const submitScore = () => submitGame('flappy', score, lastDur);
 
 /* ====== ECRÃ DE ESCOLHA ====== */
 const thumbs = [];
@@ -3013,12 +3018,15 @@ const A_G = 0.22, A_R = 14, A_GY = H - 96, A_CAN = 46;
 
 /* ---- painéis ---- */
 function aMk(id, html) { const d = document.createElement('div'); d.id = id; d.className = 'panel hidden'; d.innerHTML = html; stage.appendChild(d); return d; }
-const aHome = aMk('a_home', '<h1 style="font-size:27px">🚀 Atira o Corvo</h1><p>Lança o corvo o mais longe possível!<br>Planeia, usa foguetes, molas e balões.</p><div class="scores"><div>Recorde<b id="a_best">0</b></div><div>Penas<b id="a_pen">0</b></div></div><button id="a_go" class="gold">🚀 Lançar!</button><button id="a_shop" class="btn2">🔧 Melhorias</button>');
+const aHome = aMk('a_home', '<h1 style="font-size:27px">🚀 Atira o Corvo</h1><p>Lança o corvo o mais longe possível!<br>Planeia, usa foguetes, molas e balões.</p><div class="scores"><div>Recorde<b id="a_best">0</b></div><div>Penas<b id="a_pen">0</b></div></div><button id="a_go" class="gold">🚀 Lançar!</button><button id="a_shop" class="btn2">🔧 Melhorias</button><button id="a_topb" class="btn2">🏆 Top 10</button>');
 const aShop = aMk('a_shopp', '<h2 style="display:flex;justify-content:space-between;align-items:baseline"><span>🔧 Melhorias</span><span id="a_pen2" class="wal"></span></h2><div id="a_list"></div><button id="a_back" class="btn2">⬅ Voltar</button>');
-const aOver = aMk('a_over', '<h2>Aterragem!</h2><div class="scores"><div>Distância<b id="a_d">0</b></div><div>Recorde<b id="a_b">0</b></div></div><div class="picks" id="a_info"></div><button id="a_again" class="gold">🚀 Outra vez</button><button id="a_shop2" class="btn2">🔧 Melhorias</button><button id="a_share" class="btn2">Partilhar</button>');
+const aOver = aMk('a_over', '<h2>Aterragem!</h2><div class="scores"><div>Distância<b id="a_d">0</b></div><div>Recorde<b id="a_b">0</b></div></div><div class="picks" id="a_info"></div><div id="a_top" class="top hidden"></div><button id="a_again" class="gold">🚀 Outra vez</button><button id="a_shop2" class="btn2">🔧 Melhorias</button><button id="a_share" class="btn2">Partilhar</button>');
+const aTopP = aMk('a_topp', '<h2>🏆 Top 10</h2><div id="a_toplist" class="top"></div><button id="a_topback" class="btn2">⬅ Voltar</button>');
+aTopP.style.top = '4%'; aTopP.style.transform = 'translate(-50%,0)'; aTopP.style.maxHeight = '92%'; aTopP.style.overflowY = 'auto';
+aOver.style.top = '2%'; aOver.style.transform = 'translate(-50%,0)'; aOver.style.maxHeight = '96%'; aOver.style.overflowY = 'auto';
 aShop.style.top = '2%'; aShop.style.transform = 'translate(-50%,0)'; aShop.style.maxHeight = '96%'; aShop.style.overflowY = 'auto';
 const aEl = id => document.getElementById(id);
-function aHide() { [aHome, aShop, aOver].forEach(p => p.classList.add('hidden')); }
+function aHide() { [aHome, aShop, aOver, aTopP].forEach(p => p.classList.add('hidden')); }
 function aRefreshHome() { aEl('a_best').textContent = AS.best + ' m'; aEl('a_pen').textContent = AS.p; }
 function aBuildShop() {
   aEl('a_pen2').textContent = '🪶 ' + AS.p;
@@ -3046,6 +3054,8 @@ aEl('a_go').addEventListener('click', () => aStartAim());
 aEl('a_shop').addEventListener('click', () => aShowShop('home'));
 aEl('a_shop2').addEventListener('click', () => aShowShop('over'));
 aEl('a_back').addEventListener('click', () => aShowHome());
+aEl('a_topb').addEventListener('click', () => { aHide(); AT.st = 'top'; aTopP.classList.remove('hidden'); submitGame('atira', 0, 0, { el: aEl('a_toplist'), unit: ' m', label: 'TOP 10' }); });
+aEl('a_topback').addEventListener('click', () => aShowHome());
 aEl('a_again').addEventListener('click', () => aStartAim());
 aEl('a_share').addEventListener('click', () => {
   const text = `🚀 Atirei o ${PL().name} a ${AT.dist} m no Atira o Corvo! Consegues mais longe?`;
@@ -3095,7 +3105,7 @@ function aTapAim() {
 function aLaunch() {
   const v0 = (8 + 10.5 * AT.pw) * (1 + 0.08 * AS.u.pow), a = AT.ang * Math.PI / 180;
   aB.x = A_CAN + 24; aB.y = 38; aB.vx = v0 * Math.cos(a); aB.vy = v0 * Math.sin(a);
-  AT.st = 'fly'; AT.t = 0; AT.flightT = 0; AT.shake = 8;
+  AT.st = 'fly'; AT.t = 0; AT.flightT = 0; AT.t0 = performance.now(); AT.shake = 8;
   aPuff(A_CAN + 30, 40, 24, '#d8d0e8', 7);
   beep(120, .35, 'sawtooth', .09, -60); setTimeout(() => beep(300, .2, 'square', .05, 500), 60); haptic('notificationOccurred', 'success');
   cry(sel.p);
@@ -3112,7 +3122,9 @@ function aEnd() {
   aEl('a_d').textContent = AT.dist + ' m'; aEl('a_b').textContent = AS.best + ' m' + (AT.newBest ? ' ★' : '');
   aEl('a_info').textContent = '🪶 +' + AT.earned + ' penas (' + AT.feathers + ' apanhadas) · total ' + AS.p + '\n💥 ' + AT.bounces + ' ressaltos';
   aEl('a_info').style.whiteSpace = 'pre-line';
-  setTimeout(() => { if (AT.st === 'over' && GAME === 'atira') { aOver.classList.remove('hidden'); } }, 700);
+  AT.dur = performance.now() - AT.t0;
+  aEl('a_top').classList.add('hidden');
+  setTimeout(() => { if (AT.st === 'over' && GAME === 'atira') { aOver.classList.remove('hidden'); submitGame('atira', AT.dist, AT.dur, { el: aEl('a_top'), unit: ' m', label: 'TOP 10' }); } }, 700);
   haptic('notificationOccurred', AT.newBest ? 'success' : 'warning');
 }
 function aStep() {
