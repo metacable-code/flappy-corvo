@@ -2063,6 +2063,7 @@ async function submitGame(game, score, dur, o) {
     });
     if (!res.ok) throw new Error(res.status);
     const data = await res.json();
+    if ((data.game || 'flappy') !== game) { el.textContent = 'O servidor ainda não tem o top deste jogo. Atualiza o flappy_corvo.py no Railway.'; return; }
     try { localStorage.setItem(game === 'flappy' ? 'corvo_top' : 'corvo_top_' + game, JSON.stringify(data)); } catch (e) {}
     renderTop(data, undefined, o);
   } catch (e) {
