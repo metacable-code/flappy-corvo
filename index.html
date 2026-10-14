@@ -55,6 +55,8 @@
   .tabs { display:flex; gap:6px; justify-content:center; margin-bottom:6px; }
   .tabs span { flex:1; padding:5px 6px; white-space:nowrap; border-radius:12px; background:rgba(255,255,255,.1); font-size:12px; cursor:pointer; }
   .tabs span.on { background:var(--gold); color:#1a1030; font-weight:bold; }
+  .tabs.r span { padding:5px 2px; font-size:11px; }
+  #gridH { max-height:292px; }
   .dif { margin:6px 0 4px; font-size:15px; }
   .picks.small { font-size:12.5px; line-height:1.4; opacity:.85; white-space:pre-line; margin:4px 0; }
   .card { position:relative; }
@@ -68,18 +70,19 @@
   #godbar { position:absolute; top:10px; left:10px; z-index:6; display:flex; align-items:center; gap:2px; background:rgba(14,9,30,.7); border:1px solid rgba(255,210,90,.5); border-radius:20px; padding:2px 4px; }
   #godbar button { padding:6px 12px; margin:0; background:transparent; color:#ffd25a; font-size:18px; }
   #godbar span { font-size:13px; color:#ffe9a8; min-width:74px; text-align:center; }
+  #godbar.hidden { display:none; }
   .hidden { display:none; }
 </style>
 </head>
 <body>
 <div id="stage">
   <canvas id="c"></canvas>
-  <div id="godbar" class="hidden"><button id="gprev">◀</button><span id="godlb"></span><button id="gnext">▶</button></div>
+  <div id="godbar" class="hidden"><button id="gprev">◀</button><span id="godlb"></span><button id="gnext">▶</button><button id="gboss">👹</button></div>
   <button id="mute" aria-label="Som">🔊</button>
   <div id="ready" class="panel">
     <h1>Flappy Corvo</h1>
     <p>Passa entre as pilhas de livros<br>sem tocar em nada.</p>
-    <div class="picks">Tu voas: <b id="pn"></b><br>Atrapalha-te: <b id="hn"></b></div>
+    <div class="picks">Tu voas: <b id="pn"></b><br><span id="hrole">Atrapalha-te</span>: <b id="hn"></b></div>
     <div id="rv" class="rv hidden">⚔️ Rivais! Abusos x10 e vale tudo.</div>
     <div class="picks small" id="tr"></div>
     <div class="dif">🎲 Dificuldade aleatória em cada voo!</div>
@@ -90,6 +93,7 @@
   <div id="pick" class="panel hidden">
     <h2><span>Escolhe os pássaros</span><span id="wal" class="wal"></span></h2>
     <div class="tabs" id="ptabs"><span data-r="p" class="on"></span><span data-r="h"></span></div>
+    <div class="tabs r hidden" id="rtabs"><span data-r="rand">🎲 Auto</span><span data-r="h">😈 Atrapalha</span><span data-r="a">🤝 Ajuda</span><span data-r="m">📣 Motiva</span></div>
     <div class="grid" id="gridP"></div>
     <div class="grid hidden" id="gridH"></div>
     <div class="pinfo" id="pinfo">Toca num pássaro para o escolher.</div>
@@ -1155,6 +1159,8 @@ const GOD = () => sel.p === 'god';
 const owns = id => WAL.o.includes(id) || (id === 'god' && sel.p === 'god');
 if (!owns(sel.p)) sel.p = 'corvo';
 if (hSel !== 'rand' && !owns(hSel)) hSel = 'rand';
+let roleSel = lsGetS('corvo_role'); if (!['rand', 'h', 'a', 'm'].includes(roleSel)) roleSel = 'rand';
+let ROLE = 'h', roleStreak = { r: '', n: 0 };
 function rollH() {
   if (hSel !== 'rand') { sel.h = hSel; return; }
   const opts = ORDER.filter(i => i !== sel.p && i !== sel.h);
@@ -1163,7 +1169,7 @@ function rollH() {
 rollH();
 const PL = () => CHARS[sel.p];
 const HI = () => CHARS[sel.h];
-const rv = () => !!(PL().x && HI().x && sel.p !== sel.h && CHARS[sel.h]); // águia vs dragão = rivalidade
+const rv = () => ROLE === 'h' && !!(PL().x && HI().x && sel.p !== sel.h && CHARS[sel.h]); // águia vs dragão = rivalidade
 
 /* ====== ESTADO ====== */
 let state = 'ready', score = 0, best = 0, t = 0, scroll = 0, shake = 0, overAt = 0, newBest = false;
@@ -1207,7 +1213,8 @@ function updateHD(now, dt) {
   let tx, ty;
   if (state === 'playing') {
     const R = rv();
-    if (rest) { HD.bombing = false; HD.shove = 0; HD.shoveAt = now + 5000; HD.nextBomb = now + 7000; HD.spAt = now + 8000; HD.next = Math.max(HD.next, now + 3000); }
+    if (ROLE !== 'h') { HD.bombing = false; HD.shove = 0; HD.nextBomb = Infinity; HD.spAt = Infinity; HD.shoveAt = Infinity; }
+    if (rest || boss) { HD.bombing = false; HD.shove = 0; HD.shoveAt = now + 5000; HD.nextBomb = now + 7000; HD.spAt = now + 8000; HD.next = Math.max(HD.next, now + 3000); }
     if (!HD.bombing && now > HD.nextBomb) { HD.bombing = true; HD.bombUntil = now + (R ? 1200 : 1600); }
     if (HD.bombing && now > HD.bombUntil) { HD.bombing = false; HD.nextBomb = now + (R ? 3000 + Math.random() * 2500 : 9000 + Math.random() * 7000) * (PT().calm || 1); }
     // rivais: empurrões de propósito (avisa com ⚠ e a seta da direção)
@@ -1234,7 +1241,9 @@ function updateHD(now, dt) {
     k = Math.min(1, k * dt);
     HD.fx += (tx - HD.fx) * k; HD.fy += (ty - HD.fy) * k;
     if (now > HD.spAt) { fireSpecial(now); HD.spAt = now + (R ? 6500 + Math.random() * 3000 : 10500 + Math.random() * 5000) * (PT().calm || 1); }
-    if (now > HD.next && (R || !isTalking('p'))) {
+    if (ROLE === 'm' && now > HD.next && !isTalking('p')) {
+      say('h', rnd(CHEER[sel.h].l), 2600, true); cheerBurst(); HD.n++; HD.next = now + 9000 + Math.random() * 4000;
+    } else if (ROLE === 'h' && now > HD.next && (R || !isTalking('p'))) {
       const line = R ? rnd(pool(sel.h, 'x')) : HD.n === 0 ? rnd(pool(sel.h, 'in')) : rnd(pool(sel.h, 't'));
       HD.n++; say('h', line, R ? 2000 : 2800, true);
       HD.next = now + (R ? 4200 + Math.random() * 1000 : 7000 + Math.random() * 4000);
@@ -1328,7 +1337,7 @@ const TRAITS = {
   god:     { hr: 9, noscore: 1, t: 'MODO DEUS: invencível, sem pontos, sem moedas e fora do top. Usa ◀ ▶ para saltar de etapa.', sp: '—' },
   conde:   { calm: 2, t: 'Hipnose: quem te atrapalha faz tudo metade das vezes.', sp: 'Capa: cobre-te o ecrã por instantes.' }
 };
-const PT = () => sel.p === 'arara' ? Object.assign({}, TRAITS[sel.h] || {}, { copy: 1, coinX: 1, dance: 0, pipeCoin: 0 }) : TRAITS[sel.p];
+const PT = () => sel.p === 'arara' && ROLE === 'h' ? Object.assign({}, TRAITS[sel.h] || {}, { copy: 1, coinX: 1, dance: 0, pipeCoin: 0 }) : TRAITS[sel.p];
 let invulnUntil = 0, revived = 0, shieldUsed = false, smashLeft = 0, debris = [], danceUntil = 0;
 
 /* ====== DIFICULDADES ====== */
@@ -1503,7 +1512,7 @@ function smashPipe(p) {
   FX.banner = { text: '🦖 CRASH! ' + (smashLeft ? smashLeft + (smashLeft === 1 ? ' pilha restante' : ' pilhas restantes') : 'Última pilha!'), until: performance.now() + 1600 };
 }
 function takeCoin(c) {
-  const v = GOD() ? 0 : c.v * (PT().coinX || 1);
+  const v = GOD() ? 0 : c.v * (PT().coinX || 1) * (performance.now() < HLP.coinXUntil ? 2 : 1);
   if (v) { runCoins += v; WAL.c += v; walSave(false); }
   pops.push({ x: c.x, y: c.y, txt: GOD() ? '🪙' : '+' + v, life: 1, c: c.v > 1 ? '#7ff0ff' : '#ffd25a' });
   beep(c.v > 1 ? 1500 : 1150, .07, 'square', .04, c.v > 1 ? 2300 : 1800); haptic('impactOccurred', 'light');
@@ -1542,24 +1551,25 @@ function drawCoins() {
 }
 
 function resetGame() {
-  rest = null; applyStage(0);
+  rest = null; boss = null; applyStage(0);
   score = 0; pipes = []; feathers = []; coins = []; pops = []; debris = []; runCoins = 0; scroll = 0; newBest = false; resetFx();
   bird.y = 330; bird.vy = 0; bird.rot = 0; bird.wing = 0;
 }
 function showReady() {
-  rollH(); bird.r = PT().hr || 13;
+  rollH(); ROLE = pickRole(); bird.r = PT().hr || 13;
   clearTimeout(deathTimer); clearTimeout(gloatTimer); stopSpeech(); cawUntil = 0; topEl.classList.add('hidden');
   resetGame(); state = 'ready';
   pickEl.classList.add('hidden'); overEl.classList.add('hidden'); readyEl.classList.remove('hidden');
   document.getElementById('pn').textContent = PL().emoji + ' ' + PL().name;
   document.getElementById('hn').textContent = (hSel === 'rand' ? '🎲 ' : '') + HI().emoji + ' ' + HI().name;
   refreshWallet();
-  document.getElementById('tr').textContent = '⭐ ' + PL().name + ': ' + TRAITS[sel.p].t + '\n😈 ' + HI().name + ': ' + TRAITS[sel.h].sp;
+  document.getElementById('hrole').textContent = (roleSel === 'rand' ? '🎲 ' : '') + (ROLE === 'h' ? 'Atrapalha-te' : ROLE === 'a' ? 'Ajuda-te' : 'Motiva-te');
+  document.getElementById('tr').textContent = '⭐ ' + PL().name + ': ' + TRAITS[sel.p].t + '\n' + (ROLE === 'h' ? '😈 ' + HI().name + ': ' + TRAITS[sel.h].sp : ROLE === 'a' ? '🤝 ' + HI().name + ' (' + HELP[sel.h].n + '): ' + KIND_T[HELP[sel.h].k] : '📣 ' + HI().name + ': só te anima, sem efeitos no jogo.');
   HD.next = Infinity; HD.bombing = false; HD.replyAt = 0; HD.shove = 0; HD.spAt = Infinity;
   setMode('normal');
   document.getElementById('rv').classList.toggle('hidden', !rv());
   say('p', rnd(pool(sel.p, 'rd')), 5000, false);
-  say('h', rnd(pool(sel.h, 'in')), 5000, false);
+  say('h', ROLE === 'h' ? rnd(pool(sel.h, 'in')) : ROLE === 'a' ? HELP[sel.h].l[0] : rnd(CHEER[sel.h].l), 5000, false);
 }
 function armMode(nowT) {
   setMode(pickMode()); lastMode = cur;
@@ -1568,7 +1578,7 @@ function armMode(nowT) {
   if (cur !== 'normal') {
     FX.banner = { text: curLabel(), until: nowT + 3200 };
     const ls = (MODE_SAY[cur] || []).filter(x => CONFIG.asneiras || x[0] !== '*').map(x => x[0] === '*' ? x.slice(1) : x);
-    setTimeout(() => { if (state === 'playing') say('h', rnd(ls), 2400, true); }, 900);
+    setTimeout(() => { if (state === 'playing' && ROLE === 'h') say('h', rnd(ls), 2400, true); }, 900);
   }
 }
 /* ---- descanso entre etapas ---- */
@@ -1611,7 +1621,7 @@ function resumeStage() {
 function godJump(d) {
   if (!GOD() || state !== 'playing') return;
   const n = Math.max(0, stageN + d);
-  rest = null; switchStage(n); score = n * 50; resumeStage();
+  rest = null; boss = null; switchStage(n); score = n * 50; resumeStage();
   invulnUntil = performance.now() + 1e9;
 }
 function godUI() {
@@ -1620,10 +1630,312 @@ function godUI() {
   el.classList.toggle('hidden', !on);
   if (on) document.getElementById('godlb').textContent = '⚡ Etapa ' + (stageN + 1);
 }
+/* ====== CHEFES (fim de etapa) ====== */
+const BOSSES = { 1: { id: 'scorpion', name: 'Escorpião de Pergaminho', emoji: '🦂', hp: 3, reward: 150 } };
+let boss = null;
+function startBoss(now) {
+  const def = BOSSES[stageN]; if (!def) return;
+  boss = { def, hp: def.hp, ph: 'in', t0: now, x: LW + 150, y: FLOOR * 0.42, tx: LW - 106, hit: 0, atkN: 0, atk: null, gold: null, goldAt: 0, goldSeen: false, nextAt: 0, shots: [], bands: [], walls: [], dieAt: 0, hpShow: def.hp };
+  setMode('normal'); FX.meteors = [];
+  FX.banner = { text: def.emoji + ' CHEFE: ' + def.name, until: now + 2800 };
+  shake = Math.max(shake, 8);
+  [0, 1, 2].forEach(i => setTimeout(() => beep(150 - i * 20, .35, 'sawtooth', .08, 60), i * 220));
+  haptic('notificationOccurred', 'warning');
+}
+function bossLane() { return 70 + Math.random() * (FLOOR - 140); }
+function startAtk(b, now) {
+  const ph = b.def.hp - b.hp, kind = ['stings', 'sweep', 'walls'][b.atkN++ % 3];
+  b.atk = { kind, start: now };
+  if (kind === 'stings') {
+    const n = 3 + ph;
+    for (let i = 0; i < n; i++) b.shots.push({ y: i === 0 ? Math.max(60, Math.min(FLOOR - 60, bird.y)) : bossLane(), warnAt: now + i * 380, fireAt: now + i * 380 + 950, fired: false, w: false, x: 0, v: 5.4 + ph * 0.7 });
+  } else if (kind === 'sweep') {
+    const y1 = Math.max(55, Math.min(FLOOR - 55, bird.y + (Math.random() - .5) * 60));
+    b.bands.push({ y: y1, warnAt: now, fireAt: now + 1200, until: now + 1900, f: false });
+    if (ph >= 1) { const y2 = y1 < FLOOR / 2 ? Math.min(FLOOR - 55, y1 + 150) : Math.max(55, y1 - 150); b.bands.push({ y: y2, warnAt: now, fireAt: now + 1500, until: now + 2200, f: false }); }
+  } else {
+    const n = 2 + ph;
+    for (let i = 0; i < n; i++) b.walls.push({ x: LW + 10 + i * 165, w: 36, gy: 120 + Math.random() * (FLOOR - 240), gap: 142 - ph * 6, v: 3.5 + ph * 0.4 });
+  }
+  b.goldAt = now + 1000;
+  FX.banner = { text: kind === 'stings' ? '🦂 Ferrões!' : kind === 'sweep' ? '🦂 Cauda a varrer!' : '🏜️ Muralha de areia!', until: now + 1400 };
+}
+function hitBoss(b, now) {
+  b.hp--; b.hit = now + 450; b.gold = null; shake = 9;
+  pops.push({ x: b.x - 30, y: b.y - 40, txt: '💥', life: 1, c: '#fff' });
+  for (let i = 0; i < 26; i++) FX.parts.push({ k: 'spark', w: 1, x: b.x, y: b.y, vx: (Math.random() - .5) * 9, vy: (Math.random() - .5) * 9, life: 1, r: 2.6, c: ['#ffd25a', '#fff', '#ff9a3c'][i % 3] });
+  beep(900, .2, 'triangle', .08, 200); haptic('notificationOccurred', 'success');
+  if (b.hp <= 0) {
+    b.ph = 'dying'; b.dieAt = now; b.shots = []; b.bands = []; b.walls = []; b.atk = null; b.goldAt = 0;
+    FX.banner = { text: '🏆 ' + b.def.name + ' derrotado!', until: now + 2600 };
+    [0, 1, 2, 3].forEach(i => setTimeout(() => beep(440 + i * 220, .2, 'triangle', .07, 900), i * 130));
+  } else FX.banner = { text: '📖 Acertaste! Faltam ' + b.hp, until: now + 1500 };
+}
+function updateBoss(now, dt) {
+  const b = boss; if (!b) return;
+  const bob = Math.sin(now * 0.0022) * 20;
+  if (b.ph === 'in') {
+    b.x += (b.tx - b.x) * Math.min(1, 0.05 * dt); b.y = FLOOR * 0.42 + bob;
+    if (now - b.t0 > 2400) { b.ph = 'fight'; b.nextAt = now + 400; }
+    return;
+  }
+  if (b.ph === 'dying') {
+    b.y += 0.4 * dt; b.x += (Math.random() - .5) * 2;
+    for (let i = 0; i < 2; i++) FX.parts.push({ k: 'spark', w: 1, x: b.x + (Math.random() - .5) * 70, y: b.y + (Math.random() - .5) * 50, vx: (Math.random() - .5) * 5, vy: -Math.random() * 4, life: 1, r: 3, c: ['#ffd25a', '#ff9a3c', '#fff'][(Math.random() * 3) | 0] });
+    if (now - b.dieAt > 2300) {
+      const v = b.def.reward;
+      if (!GOD()) { runCoins += v; WAL.c += v; walSave(false); }
+      pops.push({ x: bird.x + 30, y: bird.y - 30, txt: GOD() ? '🏆' : '+' + v + ' 🪙', life: 1.6, c: '#ffd25a' });
+      boss = null; beginRest(now);
+    }
+    return;
+  }
+  b.x = b.tx + Math.sin(now * 0.0013) * 6; b.y = FLOOR * 0.42 + bob;
+  const r = bird.r - 2, safe = now < danceUntil;
+  if (!b.atk && !b.gold && !b.goldAt) { if (!b.nextAt) b.nextAt = now + 800; else if (now >= b.nextAt) { b.nextAt = 0; startAtk(b, now); } }
+  if (b.goldAt && now >= b.goldAt) {
+    b.goldAt = 0; b.gold = { x: b.x - 34, y: 90 + Math.random() * (FLOOR - 180), ph: Math.random() * 6 };
+    if (!b.goldSeen) { b.goldSeen = true; FX.banner = { text: '📖 Apanha o livro dourado!', until: now + 2400 }; }
+    beep(1300, .1, 'sine', .06, 1900);
+  }
+  if (b.gold) {
+    const g = b.gold; g.x -= 2.5 * dt; g.ph += 0.12 * dt;
+    if (Math.hypot(g.x - bird.x, g.y - bird.y) < bird.r + 18) { hitBoss(b, now); if (b.ph === 'dying') return; }
+    else if (g.x < -30) b.gold = null;
+  }
+  for (const s of b.shots) {
+    if (!s.w && now >= s.warnAt) { s.w = true; beep(900, .07, 'square', .04); }
+    if (!s.fired && now >= s.fireAt) { s.fired = true; s.x = b.x - 34; beep(260, .12, 'sawtooth', .05, 120); }
+    if (s.fired) { s.x -= s.v * dt; if (!safe && Math.hypot(s.x - bird.x, s.y - bird.y) < r + 7) { die('boss'); return; } }
+  }
+  b.shots = b.shots.filter(s => !s.fired || s.x > -30);
+  for (const a of b.bands) {
+    if (!a.f && now >= a.fireAt) { a.f = true; shake = Math.max(shake, 7); beep(110, .3, 'sawtooth', .09, 60); }
+    if (a.f && now < a.until && !safe && Math.abs(bird.y - a.y) < 22 + r) { die('boss'); return; }
+  }
+  b.bands = b.bands.filter(a => now < a.until);
+  for (const w of b.walls) {
+    w.x -= w.v * dt;
+    if (!safe && bird.x + r > w.x && bird.x - r < w.x + w.w && (bird.y - r < w.gy - w.gap / 2 || bird.y + r > w.gy + w.gap / 2)) { die('boss'); return; }
+  }
+  b.walls = b.walls.filter(w => w.x + w.w > -10);
+  if (b.atk && !b.shots.length && !b.bands.length && !b.walls.length) b.atk = null;
+}
+function cubicPt(p0, p1, p2, p3, t) {
+  const u = 1 - t; return [u * u * u * p0[0] + 3 * u * u * t * p1[0] + 3 * u * t * t * p2[0] + t * t * t * p3[0], u * u * u * p0[1] + 3 * u * u * t * p1[1] + 3 * u * t * t * p2[1] + t * t * t * p3[1]];
+}
+function drawScorpion(b, now) {
+  const c = ctx, fl = now < b.hit && ((now / 60) | 0) % 2 === 0;
+  c.save(); c.translate(b.x, b.y); c.lineCap = 'round'; c.lineJoin = 'round';
+  const sw = Math.sin(now * 0.004) * 7, ink = '#4a2e14', par = fl ? '#fff' : '#ecd9a6', par2 = fl ? '#fff' : '#c9a463';
+  const g = c.createRadialGradient(0, 0, 10, 0, 0, 100); g.addColorStop(0, 'rgba(255,170,60,.28)'); g.addColorStop(1, 'rgba(255,170,60,0)');
+  c.fillStyle = g; c.beginPath(); c.arc(0, 0, 100, 0, 7); c.fill();
+  c.strokeStyle = ink; c.lineWidth = 3;
+  for (let i = 0; i < 4; i++) { const lx = -20 + i * 14, w = Math.sin(now * 0.01 + i) * 4; c.beginPath(); c.moveTo(lx, 12); c.lineTo(lx - 6 + w, 28); c.lineTo(lx - 15 + w, 35); c.stroke(); }
+  const P0 = [28, -2], P1 = [76, -4], P2 = [74, -66 + sw], P3 = [26, -64 + sw];
+  for (let i = 0; i <= 6; i++) { const q = cubicPt(P0, P1, P2, P3, i / 6), rr = 11 - i * 0.9; c.fillStyle = par2; c.lineWidth = 2.4; c.beginPath(); c.arc(q[0], q[1], rr, 0, 7); c.fill(); c.stroke(); }
+  c.fillStyle = fl ? '#fff' : '#a02020'; c.beginPath(); c.moveTo(P3[0] - 22, P3[1] + 20); c.lineTo(P3[0] - 6, P3[1] - 8); c.lineTo(P3[0] + 10, P3[1] + 4); c.closePath(); c.fill(); c.stroke();
+  c.fillStyle = par; c.lineWidth = 3; c.beginPath(); c.ellipse(0, 0, 42, 22, 0, 0, 7); c.fill(); c.stroke();
+  c.lineWidth = 1.3; c.globalAlpha = .55;
+  for (let k = 0; k < 4; k++) { c.beginPath(); c.moveTo(-26, -11 + k * 7); c.lineTo(24 - k * 3, -11 + k * 7); c.stroke(); }
+  c.globalAlpha = 1;
+  c.fillStyle = par2; c.lineWidth = 2.6; c.beginPath(); c.ellipse(-38, -2, 17, 15, 0, 0, 7); c.fill(); c.stroke();
+  c.lineWidth = 3.2; c.beginPath(); c.moveTo(-46, -8); c.lineTo(-68, -22 + sw * 0.4); c.lineTo(-84, -10); c.stroke();
+  c.beginPath(); c.moveTo(-46, 4); c.lineTo(-66, 16 - sw * 0.4); c.lineTo(-82, 8); c.stroke();
+  c.lineWidth = 2.4; c.fillStyle = par2;
+  [[-92, -12, -.5], [-92, -3, .5], [-90, 6, -.5], [-90, 15, .5]].forEach(q => { c.beginPath(); c.ellipse(q[0], q[1], 11, 5, q[2], 0, 7); c.fill(); c.stroke(); });
+  c.fillStyle = '#d02828'; c.beginPath(); c.arc(-44, -10, 3.2, 0, 7); c.fill(); c.beginPath(); c.arc(-36, -12, 3.2, 0, 7); c.fill();
+  c.restore();
+}
+function drawBoss() {
+  const b = boss; if (!b) return; const now = performance.now(), c = ctx;
+  for (const s of b.shots) {
+    if (!s.fired) {
+      const a = 0.25 + 0.25 * Math.sin(now * 0.03);
+      c.save(); c.strokeStyle = 'rgba(255,70,50,' + a + ')'; c.lineWidth = 2; c.setLineDash([8, 8]); c.beginPath(); c.moveTo(bird.x + 20, s.y); c.lineTo(LW - 20, s.y); c.stroke(); c.restore();
+      upright(LW - 14, s.y, () => { c.font = 'bold 20px Georgia, serif'; c.textAlign = 'center'; c.fillStyle = '#ff5040'; c.fillText('!', 0, 7); });
+    } else {
+      c.save(); c.translate(s.x, s.y); c.fillStyle = '#8a1a1a'; c.strokeStyle = '#ffb347'; c.lineWidth = 2;
+      c.beginPath(); c.moveTo(-16, 0); c.lineTo(8, -6); c.lineTo(8, 6); c.closePath(); c.fill(); c.stroke();
+      c.fillStyle = '#ffb347'; c.fillRect(8, -2, 10, 4); c.restore();
+    }
+  }
+  for (const a of b.bands) {
+    const x1 = b.x - 34;
+    if (!a.f) {
+      const al = 0.1 + 0.12 * Math.sin(now * 0.03);
+      c.save(); c.fillStyle = 'rgba(255,70,50,' + al + ')'; c.fillRect(0, a.y - 22, x1, 44); c.strokeStyle = 'rgba(255,90,60,.7)'; c.setLineDash([10, 8]); c.lineWidth = 2; c.strokeRect(0, a.y - 22, x1, 44); c.restore();
+      upright(bird.x + 60, a.y, () => { c.font = 'bold 20px Georgia, serif'; c.textAlign = 'center'; c.fillStyle = '#ff5040'; c.fillText('!', 0, 7); });
+    } else {
+      const gr = c.createLinearGradient(0, a.y - 22, 0, a.y + 22); gr.addColorStop(0, '#a02020'); gr.addColorStop(.5, '#fff0c0'); gr.addColorStop(1, '#a02020');
+      c.save(); c.fillStyle = gr; c.fillRect(0, a.y - 22, x1, 44); c.fillStyle = '#a02020'; c.beginPath(); c.moveTo(x1, a.y - 22); c.lineTo(x1 + 30, a.y); c.lineTo(x1, a.y + 22); c.fill(); c.restore();
+    }
+  }
+  for (const w of b.walls) {
+    c.save(); c.fillStyle = '#c9a463'; c.strokeStyle = '#4a2e14'; c.lineWidth = 3;
+    const top = w.gy - w.gap / 2, bot = w.gy + w.gap / 2;
+    c.fillRect(w.x, -4, w.w, top + 4); c.strokeRect(w.x, -4, w.w, top + 4);
+    c.fillRect(w.x, bot, w.w, FLOOR - bot); c.strokeRect(w.x, bot, w.w, FLOOR - bot);
+    c.strokeStyle = 'rgba(74,46,20,.5)'; c.lineWidth = 1.4;
+    for (let y = 14; y < top; y += 22) { c.beginPath(); c.moveTo(w.x + 4, y); c.lineTo(w.x + w.w - 4, y); c.stroke(); }
+    for (let y = bot + 14; y < FLOOR; y += 22) { c.beginPath(); c.moveTo(w.x + 4, y); c.lineTo(w.x + w.w - 4, y); c.stroke(); }
+    c.restore();
+  }
+  drawScorpion(b, now);
+  if (b.gold) {
+    const g = b.gold, p = 1 + Math.sin(g.ph * 2) * 0.12;
+    c.save(); c.translate(g.x, g.y + Math.sin(g.ph) * 4); c.scale(p, p);
+    const gl = c.createRadialGradient(0, 0, 4, 0, 0, 34); gl.addColorStop(0, 'rgba(255,225,120,.9)'); gl.addColorStop(1, 'rgba(255,200,60,0)');
+    c.fillStyle = gl; c.beginPath(); c.arc(0, 0, 34, 0, 7); c.fill();
+    c.fillStyle = '#f2c14e'; c.strokeStyle = '#8a5a14'; c.lineWidth = 2.4; c.beginPath(); c.roundRect(-13, -17, 26, 34, 3); c.fill(); c.stroke();
+    c.fillStyle = '#b5832a'; c.fillRect(-13, -17, 6, 34); c.fillStyle = '#fff6c8'; c.beginPath(); c.arc(4, 0, 4, 0, 7); c.fill();
+    c.restore();
+  }
+}
+function drawBossUI() {
+  const b = boss; if (!b || b.ph === 'in' && false) return;
+  b.hpShow += (b.hp - b.hpShow) * 0.12;
+  const c = ctx, x = W / 2 - 100, y = 168;
+  c.save(); c.textAlign = 'center'; c.font = 'bold 13px Georgia, serif'; c.lineWidth = 3; c.strokeStyle = 'rgba(10,6,24,.9)';
+  const lb = b.def.emoji + ' ' + b.def.name; c.strokeText(lb, W / 2, y - 6); c.fillStyle = '#ffe9a8'; c.fillText(lb, W / 2, y - 6);
+  c.fillStyle = 'rgba(10,6,24,.75)'; c.fillRect(x - 2, y - 2, 204, 16);
+  c.fillStyle = '#c0392b'; c.fillRect(x, y, 200 * Math.max(0, b.hpShow / b.def.hp), 12);
+  c.strokeStyle = '#ffd25a'; c.lineWidth = 1.5; c.strokeRect(x - 2, y - 2, 204, 16);
+  for (let i = 1; i < b.def.hp; i++) { c.beginPath(); c.moveTo(x + 200 * i / b.def.hp, y); c.lineTo(x + 200 * i / b.def.hp, y + 12); c.stroke(); }
+  c.restore();
+}
+
+/* ====== PAPÉIS DO COMPANHEIRO: atrapalhar / ajudar / motivar ====== */
+const KIND_T = {
+  guide: 'guia-te até ao próximo vão', coins: 'espalha moedas à tua frente', coin2: 'dobra as moedas durante 9 s',
+  slow: 'abranda o tempo durante 4 s', widen: 'alarga os vãos das próximas torres', magnet: 'atrai as moedas durante 7 s',
+  float: 'deixa-te mais leve durante 5 s', smash: 'esmaga a próxima torre', clear: 'limpa o mau tempo (ou dá escudo)',
+  shield: 'dá-te um escudo de 2 s', revive: 'dá-te uma vida extra'
+};
+const HELP = {
+  corvo: { k: 'guide', n: 'Voo guiado', l: ['Segue o meu rasto!', 'Vai por aqui, eu conheço o caminho!', 'Confia em mim, eu guio-te!'] },
+  ju: { k: 'coins', n: 'Chuva de selfies', l: ['Selfie de moedas! Sorri!!', 'Toma lá umas moedas, linda!!', 'Moedas para toda a gente!!'] },
+  aguia: { k: 'slow', n: 'Olho de águia', l: ['Vejo tudo, vou travar o tempo!', 'Calma, vê com olho de águia!', 'Tempo! Pausa técnica!'] },
+  liberdade: { k: 'shield', n: 'Escudo da liberdade', l: ['Liberdade! Toma o escudo!', 'Ninguém te prende hoje!', 'Voa livre e protegido!'] },
+  dragao: { k: 'smash', n: 'Baforada', l: ['Fogo! Queimo a próxima torre!', 'Deixa comigo, derreto-a!', 'Afasta-te, vou queimar!'] },
+  fenix: { k: 'revive', n: 'Cinzas', l: ['Se caíres, eu trago-te de volta!', 'Uma vida extra das minhas cinzas!', 'Eu renasço, tu também!'] },
+  pomba: { k: 'clear', n: 'Paz', l: ['Paz! Limpo-te o céu!', 'Calma, vem aí a paz!', 'Que o céu fique limpo!'] },
+  morcego: { k: 'magnet', n: 'Eco-moedas', l: ['Iiiih! Sinto as moedas todas!', 'Eco-localização de moedas!', 'Vêm todas para ti, iiiih!'] },
+  conde: { k: 'float', n: 'Levitação', l: ['Deixa-me aliviar-te o peso, meu caro.', 'Voa leve, como o meu manto.', 'Com elegância, meu caro.'] },
+  pato: { k: 'coins', n: 'Quack-moedas', l: ['Quack! Moedinhas para ti!', 'Encontrei estas moedas na lagoa!', 'Quack quack, moedas!'] },
+  mocho: { k: 'widen', n: 'Sabedoria', l: ['Uuuh, alargo-te o caminho.', 'A sabedoria alarga os vãos.', 'Uuuh, passa à vontade.'] },
+  abutre: { k: 'smash', n: 'Abutre faminto', l: ['Cheira-me a livros, vou comer a torre!', 'Fome de torre! Nham!', 'Deixa a torre comigo!'] },
+  tucano: { k: 'coin2', n: 'Fruta da sorte', l: ['Fruta da sorte! Moedas a dobrar!', 'Come fruta e ganha o dobro!', 'Moedas a dobrar, amigo!'] },
+  picapau: { k: 'smash', n: 'Toc toc', l: ['Toc toc! Parto-te a próxima torre!', 'Deixa comigo, bico de aço!', 'Toc toc toc, torre fora!'] },
+  dodo: { k: 'shield', n: 'Sorte do dodo', l: ['Ainda estou aqui, e tu também!', 'O dodo protege-te!', 'Escudo de dodo, à prova de extinção!'] },
+  arara: { k: 'guide', n: 'Eco guia', l: ['Cá cá! Eu mostro o caminho!', 'Segue-me, cá cá!', 'Vai atrás de mim!'] },
+  gaivota: { k: 'magnet', n: 'Ladra amiga', l: ['Desta vez roubo moedas para ti!', 'Cá vem tudo para ti!', 'Moedas roubadas, mas para ti!'] },
+  pelicano: { k: 'coins', n: 'Bico cheio', l: ['Bico cheio de moedas! Toma!', 'Despejo o bico para ti!', 'Pesca de moedas!'] },
+  pavao: { k: 'widen', n: 'Leque', l: ['Abro o leque e alargo o caminho!', 'Admira o meu leque, e passa!', 'Passagem real, meu caro!'] },
+  ptero: { k: 'smash', n: 'Rugido', l: ['Rooaar! Esmago-te a próxima torre!', 'Sou do tempo dos dinossauros!', 'Rooaar, torre fora!'] },
+  ana: { k: 'slow', n: 'Zzzum', l: ['Zzzz! Abrando o tempo para ti!', 'Respira, eu seguro o tempo!', 'Zzzz, devagarinho!'] },
+  jorge: { k: 'float', n: 'Pólen leve', l: ['Pólen leve! Voas mais leve!', 'Asas de borboleta para ti!', 'Flutua comigo!'] },
+  rafa: { k: 'guide', n: 'Folha guia', l: ['Deixa-me levar-te, o vento ajuda!', 'A folha mostra o caminho!', 'Vai com o vento!'] },
+  paraiso: { k: 'coin2', n: 'Penas de ouro', l: ['Penas de ouro: moedas a dobrar!', 'Brilha comigo, moedas em dobro!', 'Ouro a dobrar!'] }
+};
+const CHEER = {
+  corvo: { fx: '🪶', l: ['Crá! Tu consegues!', 'Mais uma torre e és lenda!', 'Eu acredito em ti, amigo!'] },
+  ju: { fx: '📸', l: ['Estás tão fotogénico!!', 'Lindo voo! Fotografado!!', 'Vai, vai, vai!!'] },
+  aguia: { fx: '🏅', l: ['Grande voo, campeão!', 'Isso é jogar como um campeão!', 'Fair play total!'] },
+  liberdade: { fx: '🗽', l: ['Livre como o vento!', 'Voa livre, amigo!', 'A liberdade é tua!'] },
+  dragao: { fx: '🔥', l: ['Arrasa com fogo!', 'Que garra, amigo!', 'Queima tudo!'] },
+  fenix: { fx: '✨', l: ['Renasces sempre, vai!', 'Das cinzas à glória!', 'Brilha!'] },
+  pomba: { fx: '🕊️', l: ['Paz e amor, tu consegues!', 'Voa com calma e paz!', 'Que lindo de ver!'] },
+  morcego: { fx: '🦇', l: ['Iiiih! Que voo!', 'Na escuridão és tu o rei!', 'Continua, continua!'] },
+  conde: { fx: '🧛', l: ['Magnífico, meu caro!', 'Excelente voo, a noite é tua!', 'Com classe, sempre!'] },
+  pato: { fx: '🦆', l: ['Quack quack, vai!', 'Nada mal, amigo!', 'Quack! Mais uma!'] },
+  mocho: { fx: '📚', l: ['Uuuh, estás a ir muito bem.', 'Sábio voo, meu jovem.', 'Quem? Tu! Tu consegues.'] },
+  abutre: { fx: '🍖', l: ['Vais bem, continua!', 'Cheira-me a recorde!', 'Força, que a fome é grande!'] },
+  tucano: { fx: '🍉', l: ['Fruta e força, amigo!', 'Bora lá, que sabe bem!', 'Voa doce!'] },
+  picapau: { fx: '🪵', l: ['Toc toc, continua!', 'Bico firme, voo firme!', 'Dá-lhe, dá-lhe!'] },
+  dodo: { fx: '🥚', l: ['O último dodo acredita em ti!', 'Não desistas, vai!', 'Ainda há esperança!'] },
+  arara: { fx: '🎉', l: ['Cá cá! Grande voo!', 'Cá cá, tu consegues!', 'Repete esse voo!'] },
+  gaivota: { fx: '🌊', l: ['Vento a favor, amigo!', 'Voa junto ao mar!', 'Grande voo, marinheiro!'] },
+  pelicano: { fx: '🐟', l: ['Bico em cima, vamos!', 'Boa pesca de pontos!', 'Segue em frente!'] },
+  pavao: { fx: '🌈', l: ['Que elegância, amigo!', 'Quase tão lindo como eu!', 'Lindo!'] },
+  ptero: { fx: '🦖', l: ['Rooaar, vai com tudo!', 'Extinto? Tu não!', 'Rei do céu!'] },
+  ana: { fx: '🌺', l: ['Zzzz, vai, vai!', 'Sou fã do teu voo!', 'Zzzz, que rapidez!'] },
+  jorge: { fx: '🦋', l: ['Que voo tão bonito!', 'Leve como uma borboleta!', 'Continua a bater asas!'] },
+  rafa: { fx: '🍂', l: ['Calma, é só outono!', 'Cai devagar, voa bem!', 'Estou contigo!'] },
+  paraiso: { fx: '🌴', l: ['Dança com o teu voo!', 'Que beleza de voo!', 'Aplausos!'] }
+};
+const HLP = { next: Infinity, slowUntil: 0, magnetUntil: 0, coinXUntil: 0, floatUntil: 0, guideUntil: 0, widenN: 0, life: 0 };
+function helpReset(now) {
+  HLP.slowUntil = HLP.magnetUntil = HLP.coinXUntil = HLP.floatUntil = HLP.guideUntil = 0; HLP.widenN = 0; HLP.life = 0;
+  HLP.next = ROLE === 'a' ? now + 7000 : Infinity;
+}
+function helpBurst(col) {
+  for (let i = 0; i < 22; i++) FX.parts.push({ k: 'spark', w: 1, x: HD.fx, y: HD.fy, vx: (Math.random() - .5) * 7, vy: (Math.random() - .5) * 7, life: 1, r: 2.4, c: col });
+}
+function helpAct(now) {
+  const H = HELP[sel.h]; if (!H) { HLP.next = Infinity; return; }
+  let k = H.k;
+  if (k === 'clear' && cur === 'normal') k = 'shield';
+  if (k === 'revive' && HLP.life > 0) { HLP.next = now + 8000; return; }
+  if (k === 'guide') HLP.guideUntil = now + 1700;
+  else if (k === 'coins') for (let i = 0; i < 7; i++) coins.push({ x: bird.x + 90 + i * 30, y: Math.max(60, Math.min(FLOOR - 60, bird.y + Math.sin(i * 0.9) * 34)), v: i === 3 ? 5 : 1, ph: i });
+  else if (k === 'coin2') HLP.coinXUntil = now + 9000;
+  else if (k === 'slow') HLP.slowUntil = now + 4000;
+  else if (k === 'widen') { let c = 0; for (const p of pipes) if (!p.passed && !p.broken && c < 3) { p.gap += 36; c++; } HLP.widenN = 1; }
+  else if (k === 'magnet') HLP.magnetUntil = now + 7000;
+  else if (k === 'float') HLP.floatUntil = now + 5000;
+  else if (k === 'smash') smashLeft = Math.min(2, smashLeft + 1);
+  else if (k === 'clear') { setMode('normal'); FX.meteors = []; FX.flash = 0; FX.bolt = null; }
+  else if (k === 'shield') invulnUntil = Math.max(invulnUntil, now + 2200);
+  else if (k === 'revive') HLP.life = 1;
+  FX.banner = { text: '🤝 ' + CHARS[sel.h].emoji + ' ' + H.n + '!', until: now + 2000 };
+  say('h', rnd(H.l), 2400, true);
+  helpBurst(['#7fe3a0', '#fff', '#ffd25a'][(Math.random() * 3) | 0]);
+  beep(660, .12, 'triangle', .06, 990); setTimeout(() => beep(990, .14, 'triangle', .06, 1320), 110);
+  haptic('notificationOccurred', 'success');
+  HLP.next = now + (k === 'revive' ? 30000 : 15000 + Math.random() * 5000);
+}
+function updateHelp(now, dt) {
+  if (ROLE !== 'a' || state !== 'playing') return;
+  if (boss) HLP.next = Math.max(HLP.next, now + 3000);
+  else if (now >= HLP.next) helpAct(now);
+  if (now < HLP.guideUntil) { const p = pipes.find(q => !q.broken && q.x + PW > bird.x - 8); if (p) { bird.y += (p.gapY - bird.y) * 0.1 * dt; bird.vy *= 0.6; } }
+}
+function cheerBurst() {
+  const C = CHEER[sel.h]; if (!C) return;
+  for (let i = 0; i < 3; i++) pops.push({ x: HD.fx + (i - 1) * 18, y: HD.fy - 30 - i * 8, txt: C.fx, life: 1.5, c: '#fff' });
+  haptic('impactOccurred', 'light');
+}
+/* escolha do papel: o algoritmo adapta-se aos últimos voos */
+function histLoad() { try { return JSON.parse(localStorage.getItem('corvo_hist') || '[]').slice(-6); } catch (e) { return []; } }
+function histPush(s) { try { const h = histLoad(); h.push(s); localStorage.setItem('corvo_hist', JSON.stringify(h.slice(-6))); } catch (e) {} }
+function pickRole() {
+  let r;
+  if (roleSel !== 'rand') r = roleSel;
+  else {
+    const w = { h: 46, a: 30, m: 24 }, hist = histLoad();
+    if (hist.length) {
+      const avg = hist.reduce((a, b) => a + b, 0) / hist.length, last = hist[hist.length - 1];
+      if (last < Math.max(5, avg * 0.6)) { w.a += 25; w.m += 10; w.h -= 25; }
+      else if (last >= 15 && last >= avg * 1.3) { w.h += 20; w.a -= 10; w.m -= 5; }
+    }
+    if (roleStreak.n >= 2) w[roleStreak.r] *= 0.25;
+    let x = Math.random() * (w.h + w.a + w.m);
+    r = x < w.h ? 'h' : x < w.h + w.a ? 'a' : 'm';
+  }
+  roleStreak = roleStreak.r === r ? { r, n: roleStreak.n + 1 } : { r, n: 1 };
+  return r;
+}
+
+function godBoss() {
+  if (!GOD() || state !== 'playing') return;
+  if (stageN !== 1) { rest = null; switchStage(1); score = 50; resumeStage(); }
+  boss = null; pipes = []; startBoss(performance.now()); invulnUntil = performance.now() + 1e9;
+}
 function startGame() {
   state = 'playing'; readyEl.classList.add('hidden'); rest = null; bird.vy = -(PT().flap || 7.4) + 0.2; playStart = performance.now(); bird.r = PT().hr || 13; invulnUntil = 0; revived = 0; shieldUsed = false; smashLeft = PT().smash || 0; debris = []; danceUntil = 0;
   const nowT = performance.now();
-  armMode(nowT);
+  armMode(nowT); helpReset(nowT);
   HD.spAt = nowT + 6500; HD.shove = 0; HD.shoveAt = nowT + 6000; HD.n = 0; HD.next = nowT + (cur !== 'normal' ? 3600 : rv() ? 1200 : 1800); HD.nextBomb = nowT + 7000; HD.replyAt = 0; HD.bombing = false;
 }
 function flap() {
@@ -1632,15 +1944,15 @@ function flap() {
   if (state === 'playing' && !(rest && rest.ph !== 'out')) { bird.vy = -(PT().flap || 7.4); beep(520, .09, 'square', .04, 380); haptic('impactOccurred', 'light'); }
 }
 
-function reviveNow(now) {
+function reviveNow(now, helper) {
   invulnUntil = now + 2200; bird.vy = -7;
   const q = pipes.find(x => x.x + PW > bird.x - 10);
   bird.y = q ? Math.max(60, Math.min(FLOOR - 60, q.gapY)) : FLOOR * 0.5;
   FX.meteors = [];
   for (let i = 0; i < 40; i++) FX.parts.push({ k: 'fire', w: 1, x: bird.x, y: bird.y, vx: (Math.random() - .5) * 7, vy: (Math.random() - .5) * 7, life: 1, r: 3 + Math.random() * 4 });
-  FX.banner = { text: '🔥 Renasceu das cinzas!', until: now + 2200 };
+  FX.banner = { text: helper ? '🤝 ' + CHARS[sel.h].emoji + ' Vida extra!' : '🔥 Renasceu das cinzas!', until: now + 2200 };
   beep(300, .5, 'triangle', .08, 900); haptic('notificationOccurred', 'success');
-  say('p', 'Eu renasço das cinzas!', 2000, true);
+  if (helper) say('h', 'Levanta-te, eu estou contigo!', 2000, true); else say('p', 'Eu renasço das cinzas!', 2000, true);
 }
 function die(cause) {
   if (state !== 'playing') return;
@@ -1653,7 +1965,9 @@ function die(cause) {
     beep(700, .25, 'triangle', .07, 500); haptic('notificationOccurred', 'success');
     return;
   }
+  if (HLP.life > 0) { HLP.life--; reviveNow(nowD, true); return; }
   if (PT().revive && revived < PT().revive) { revived++; reviveNow(nowD); return; }
+  if (!GOD()) histPush(score);
   state = 'over'; overAt = performance.now(); shake = 10; lastDur = overAt - playStart;
   bird.vy = -4;
   const fc = PL().pc;
@@ -1739,6 +2053,7 @@ function setTab(r) {
   pickTab = r;
   document.getElementById('gridP').classList.toggle('hidden', r !== 'p');
   document.getElementById('gridH').classList.toggle('hidden', r !== 'h');
+  document.getElementById('rtabs').classList.toggle('hidden', r !== 'h');
   document.querySelectorAll('#ptabs span').forEach(sp => sp.classList.toggle('on', sp.dataset.r === r));
 }
 function buildPick() {
@@ -1764,6 +2079,7 @@ function buildPick() {
     });
   });
   document.querySelectorAll('#ptabs span').forEach(sp => sp.addEventListener('click', () => setTab(sp.dataset.r)));
+  document.querySelectorAll('#rtabs span').forEach(sp => sp.addEventListener('click', () => { roleSel = sp.dataset.r; lsSet('corvo_role', roleSel); refreshPick(); }));
 }
 function choose(role, id) {
   if (id !== 'rand' && !owns(id)) { lastPicked = id; refreshPick(); return; } // bloqueado: mostra o preço
@@ -1783,12 +2099,13 @@ function refreshPick() {
   if (randCard) randCard.classList.toggle('sel', hSel === 'rand');
   const tabs = document.querySelectorAll('#ptabs span');
   tabs[0].textContent = '🕊️ Tu voas: ' + PL().name;
-  tabs[1].textContent = '😈 Atrapalha: ' + (hSel === 'rand' ? '🎲' : CHARS[hSel].name);
+  tabs[1].textContent = '🐦 Companheiro: ' + (hSel === 'rand' ? '🎲' : CHARS[hSel].name);
+  document.querySelectorAll('#rtabs span').forEach(sp => sp.classList.toggle('on', sp.dataset.r === roleSel));
   let txt;
   if (lastPicked === 'rand') txt = '🎲 Aleatório — em cada voo é sorteado quem te atrapalha.';
   else {
     const ch = CHARS[lastPicked] || PL(), tr = TRAITS[ch.id];
-    txt = ch.emoji + ' ' + ch.name + ' — ' + ch.bio + (owns(ch.id) ? '' : '\n🔒 Bloqueado: custa 🪙' + PRICE[ch.id]) + '\n⭐ A voar: ' + tr.t + '\n😈 A atrapalhar: ' + tr.sp + (hSel !== 'rand' && rv() ? '\n⚔️ Rivais! Abusos x10 e vale tudo.' : '');
+    txt = ch.emoji + ' ' + ch.name + ' — ' + ch.bio + (owns(ch.id) ? '' : '\n🔒 Bloqueado: custa 🪙' + PRICE[ch.id]) + '\n⭐ A voar: ' + tr.t + '\n😈 A atrapalhar: ' + tr.sp + (HELP[ch.id] ? '\n🤝 A ajudar: ' + HELP[ch.id].n + ' — ' + KIND_T[HELP[ch.id].k] + '\n📣 A motivar: ' + CHEER[ch.id].fx + ' só te anima' : '') + (hSel !== 'rand' && rv() ? '\n⚔️ Rivais! Abusos x10 e vale tudo.' : '');
   }
   document.getElementById('pinfo').textContent = txt;
 }
@@ -1873,7 +2190,7 @@ function update(dt) {
   updateAmbient(dt);
   updateHD(nowMs, dt);
   bird.wing += dt * (state === 'playing' ? 0.38 : 0.16);
-  const speed = (2.3 + Math.min(score * 0.04, 1.2) + Math.min(stageN * 0.06, 0.3)) * (on('turbo') ? 1.3 : 1) * (PT().spd || 1) * (STG.vert ? 1.08 : 1);
+  const speed = (2.3 + Math.min(score * 0.04, 1.2) + Math.min(stageN * 0.06, 0.3)) * (on('turbo') ? 1.3 : 1) * (PT().spd || 1) * (STG.vert ? 1.08 : 1) * (nowMs < HLP.slowUntil ? 0.65 : 1);
   updateMode(nowMs, dt);
   updateSpecials(nowMs, dt);
 
@@ -1887,16 +2204,18 @@ function update(dt) {
       bird.y += (rest.cy + Math.sin(t * 0.07) * 8 - bird.y) * Math.min(1, 0.08 * dt);
     } else {
     scroll += speed * dt;
-    bird.vy = Math.min(bird.vy + (PT().grav || 0.42) * dt, 9);
+    bird.vy = Math.min(bird.vy + (PT().grav || 0.42) * (nowMs < HLP.floatUntil ? 0.6 : 1) * dt, 9);
     bird.y += bird.vy * dt;
     bird.rot = Math.max(-0.5, Math.min(1.2, bird.vy * 0.075));
     if (bird.y - bird.r < 0) { bird.y = bird.r; bird.vy = 0; }
+    updateHelp(nowMs, dt);
 
-    if (!rest && (!pipes.length || pipes[pipes.length - 1].x <= LW - ((on('turbo') ? 208 : 160) - Math.min(stageN * 8, 24)))) {
+    if (!rest && !boss && (!pipes.length || pipes[pipes.length - 1].x <= LW - ((on('turbo') ? 208 : 160) - Math.min(stageN * 8, 24)))) {
       const np = makePipe(), pr = pipes[pipes.length - 1];
+      if (HLP.widenN > 0) { np.gap += 36; HLP.widenN--; }
       pipes.push(np); if (pr) spawnCoins(pr, np);
     }
-    const mg = PT().magnet || 0;
+    const mg = Math.max(PT().magnet || 0, nowMs < HLP.magnetUntil ? 95 : 0);
     for (const c of coins) {
       c.x -= speed * dt;
       if (mg) { const dx = bird.x - c.x, dy = bird.y - c.y, d = Math.hypot(dx, dy); if (d < mg && d > 1) { const k = (Math.min(1, (mg - d) / mg) * 4 + 1.5) * dt; c.x += dx / d * k; c.y += dy / d * k; } }
@@ -1908,7 +2227,8 @@ function update(dt) {
         p.passed = true; score++;
         if (PT().pipeCoin) { runCoins += 1; WAL.c += 1; pops.push({ x: bird.x + 22, y: bird.y - 26, txt: '+1', life: 1, c: '#ffe28a' }); walSave(false); }
         if (PT().dance && score % PT().dance === 0) startDance(nowMs);
-        if (score % 50 === 0 && !rest) beginRest(nowMs);
+        if (ROLE === 'm' && score % 5 === 0 && !isTalking('h')) { say('h', rnd(CHEER[sel.h].l), 2200, true); cheerBurst(); HD.next = nowMs + 7000; }
+        if (score % 50 === 0 && !rest && !boss) { if (BOSSES[stageN]) startBoss(nowMs); else beginRest(nowMs); }
         if ([5, 10, 15, 20, 30, 50].includes(score)) say('p', rnd(pool(sel.p, 'p')).replace(/\{n\}/g, score), 2200, true);
         beep(880, .12, 'triangle', .05, 300); haptic('impactOccurred', 'soft');
       }
@@ -1926,6 +2246,7 @@ function update(dt) {
         die('pipe'); break;
       }
     }
+    if (state === 'playing') updateBoss(nowMs, dt);
     if (state === 'playing') {
       coins = coins.filter(c => {
         if (Math.hypot(c.x - bird.x, c.y - bird.y) < bird.r + (c.v > 1 ? 13 : 11)) { takeCoin(c); return false; }
@@ -2195,7 +2516,7 @@ function fireSpecial(now) {
     FX.sp.push({ k: 'terror', start: now, until: now + 2600, b: Array.from({ length: 16 }, () => ({ x: 20 + Math.random() * 320, d: Math.random() * 0.5, c: PALETTE[(Math.random() * PALETTE.length) | 0], r: Math.random() * 6 })) });
   }
   const line = SP_SAY[id];
-  if (line && (CONFIG.asneiras || line[0] !== '*') && !isTalking('h')) say('h', line[0] === '*' ? line.slice(1) : line, 1600, true);
+  if (ROLE === 'h' && line && (CONFIG.asneiras || line[0] !== '*') && !isTalking('h')) say('h', line[0] === '*' ? line.slice(1) : line, 1600, true);
 }
 function updateSpecials(now, dt) {
   for (const e of FX.sp) {
@@ -2587,6 +2908,7 @@ function draw() {
   if (state !== 'pick') {
     if (!hdFront()) drawHinderer(false);
     for (const p of pipes) if (!p.broken) drawPipe(p);
+    drawBoss();
     drawDebris();
     drawCoins();
     if (th) drawGroundStadium(); else if (sc) sc.ground(); else drawGround();
@@ -2607,6 +2929,7 @@ function draw() {
     drawScore();
     drawBanner();
     drawRestUI();
+    drawBossUI();
   }
   ctx.restore();
   if (state === 'pick') drawThumbs();
@@ -2634,6 +2957,7 @@ if (hadChoice) showReady(); else openPick();
   });
   document.getElementById('gprev').addEventListener('click', () => godJump(-1));
   document.getElementById('gnext').addEventListener('click', () => godJump(1));
+  document.getElementById('gboss').addEventListener('click', () => godBoss());
 })();
 
 </script>
