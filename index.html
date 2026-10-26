@@ -3524,12 +3524,14 @@ document.getElementById('m_bib').addEventListener('click', startBib);
 homeBtn.addEventListener('click', openMenu);
 openMenu();
 
-/* ====== MÚSICA (corvo.mp3, ao lado do index.html) ====== */
-const MUS = new Audio('corvo.mp3'); MUS.loop = true; MUS.volume = 0.45; MUS.preload = 'auto';
+/* ====== MÚSICA (corvo.mp3 no menu e Flappy · atira.mp3 no Atira; ficheiros ao lado do index.html) ====== */
+const MUS = new Audio('corvo.mp3'), MUA = new Audio('atira.mp3');
+[MUS, MUA].forEach(a => { a.loop = true; a.preload = 'auto'; }); MUS.volume = 0.45; MUA.volume = 0.32;
 function musSync() {
-  const want = !muted && !document.hidden && (GAME === 'menu' || GAME === 'flappy');
-  if (want) { if (MUS.paused) { const p = MUS.play(); if (p && p.catch) p.catch(() => {}); } }
-  else if (!MUS.paused) MUS.pause();
+  const on = !muted && !document.hidden;
+  [[MUS, on && (GAME === 'menu' || GAME === 'flappy')], [MUA, on && GAME === 'atira']].forEach(([a, want]) => {
+    if (want) { if (a.paused) { const p = a.play(); if (p && p.catch) p.catch(() => {}); } } else if (!a.paused) a.pause();
+  });
 }
 ['pointerdown', 'touchend', 'keydown'].forEach(ev => window.addEventListener(ev, () => setTimeout(musSync, 0), { passive: true }));
 document.addEventListener('visibilitychange', musSync);
