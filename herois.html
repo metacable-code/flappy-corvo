@@ -175,7 +175,7 @@ const SFX = {
   lose: () => [392, 330, 262].forEach((f, i) => setTimeout(() => beep(f, .25, 'triangle', .06), i * 180)),
   card: () => beep(660, .1, 'triangle', .05, 990),
 };
-const MUSIC = new Audio('herois.mp3'); MUSIC.loop = true; MUSIC.volume = .35; let musicOK = true;
+const MUSIC = new Audio('herois.mp3?v=2'); MUSIC.loop = true; MUSIC.volume = .35; let musicOK = true;
 MUSIC.addEventListener('error', () => { musicOK = false; });
 function musSync() { if (!musicOK) return; if (!muted && !document.hidden) { const p = MUSIC.play(); if (p && p.catch) p.catch(() => {}); } else MUSIC.pause(); }
 addEventListener('pointerdown', () => setTimeout(musSync, 0)); document.addEventListener('visibilitychange', musSync);
