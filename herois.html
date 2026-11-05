@@ -559,13 +559,23 @@ function tts(text, id, force) {
     const v = VOZ[id] || [1, 1]; u.pitch = v[0]; u.rate = v[1]; u.volume = 1; speechSynthesis.speak(u); } catch (e) {}
 }
 const pick = a => a[Math.floor(Math.random() * a.length)];
+// vozes gravadas (ElevenLabs): herois/vozes/<heroi>_<tipo>_<n>.mp3 — n = posição da fala em FALAS. Pôr o nome aqui quando o ficheiro existir.
+const VOZES_MP3 = ['quixote_sp_1', 'dracula_sp_1', 'holmes_sp_0'];
+const AUD = {};
+VOZES_MP3.forEach(k => { const a = new Audio(); a.preload = 'auto'; a.addEventListener('canplaythrough', () => { a.ok = true; }); a.addEventListener('error', () => { if (!a.alt) { a.alt = 1; a.src = 'her%C3%B3is/vozes/' + k + '.mp3?v=1'; } }); a.src = 'herois/vozes/' + k + '.mp3?v=1'; AUD[k] = a; });
+let audNow = null;
+function playVoz(k) {
+  const a = AUD[k]; if (!a || !a.ok || muted || !vozOn) return false;
+  try { if (audNow) audNow.pause(); if (hasTTS) speechSynthesis.cancel(); a.currentTime = 0; a.volume = 1; const pr = a.play(); if (pr && pr.catch) pr.catch(() => {}); audNow = a; lastTalk = performance.now() / 1000; return true; } catch (e) { return false; }
+}
 // fala: balão + voz. tipo: sp, kill, ko, lvl, book, boss. prob = probabilidade (1 = sempre)
 function fala(h, tipo, prob) {
   if (!h || (prob != null && Math.random() > prob)) return;
   const F = FALAS[h.id]; if (!F || !F[tipo]) return;
   const busy = fx.some(f => f.k === 'say' && f.t < 1.2); if (busy && tipo === 'kill') return;
   for (let i = fx.length - 1; i >= 0; i--) if (fx[i].k === 'say') fx.splice(i, 1);
-  const s = pick(F[tipo]); fx.push({ k: 'say', h, s, t: 0, life: 2.2 }); tts(s, h.id, tipo === 'sp' || tipo === 'book');
+  const i = Math.floor(Math.random() * F[tipo].length), s = F[tipo][i]; fx.push({ k: 'say', h, s, t: 0, life: 2.2 });
+  if (!playVoz(h.id + '_' + tipo + '_' + i)) tts(s, h.id, tipo === 'sp' || tipo === 'book');
 }
 
 
