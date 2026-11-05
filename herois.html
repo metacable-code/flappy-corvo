@@ -1013,6 +1013,8 @@ function advGeo() {
 }
 const advCap = () => 8 + 2 * AV.lvl;
 const advNeed = l => 2 + l;
+// trânsito: estrada horizontal e linha de metro vertical na praça
+function advTraf(G) { const S0 = G.hx + G.wd * .5; return { ry: G.y0 + 330, rh: 74, mx: S0 + 330, mw: 64 }; }
 function advSt(G) { return { bx: G.hx + G.wd * .5 - 170, by: G.y0 + 190, lx: G.hx + G.wd * .5, zy: G.y0 + 14 }; }
 function advUnit(id) { const d = HD[id]; const u = { id, d, x: 0, y: 0, hp: 1, max: 1, atkBase: 1, cdT: .3, aT: null, pend: null, kb: 0, hurtT: 0, dead: false, deadT: 0, walk: 0, moving: false, flip: false, charge: 40 }; return u; }
 function advStats(u, heal) { const m = lvlMul(SV.u[u.id] || 1) * (1 + .18 * (AV.lvl - 1)), r = u.max ? u.hp / u.max : 1; u.max = Math.round(u.d.hp * m); u.hp = heal ? u.max : Math.max(1, Math.round(u.max * r)); u.atkBase = u.d.atk * m; }
@@ -1020,7 +1022,7 @@ function nextSummon() { return ORDER.find(id => !AV.party.some(u => u.id === id)
 
 function startAdv() {
   const st = Math.min(SV.sel || 0, SV.unl || 0);
-  AV = { st, party: [], en: [], dying: [], drops: [], pr: [], cam: 0, camY: 0, lvl: 1, xp: 0, books: 0, earned: 0, carry: [], spawnT: 1.5, bossOut: false,
+  AV = { cars: [], carT: 1, train: null, trainT: 9, st, party: [], en: [], dying: [], drops: [], pr: [], cam: 0, camY: 0, lvl: 1, xp: 0, books: 0, earned: 0, carry: [], spawnT: 1.5, bossOut: false,
     binder: { inF: 0, out: 0, t: 0 }, xferT: 0, summons: 0, unlocked: [], joy: null, kills: 0, glow: 0, banner: { t: 3, txt: 'Apanha as folhas!' }, quit: 0 };
   const G = advGeo(), S = advSt(G), lead = advUnit(SV.team[0] || 'quixote');
   advStats(lead, true); lead.x = G.hx + G.wd * .38; lead.y = G.y0 + 150; AV.party.push(lead); AV.camY = 0;
@@ -1083,6 +1085,83 @@ function advSpecial() {
   fala(u, 'sp');
   fx.push({ k: 'ring', x: u.x, y: u.y - 30, col: u.d.col, t: 0, life: .45 });
   es.forEach(e => { advHurtE(e, u.atkBase * 3.5, u, true); e.kb = clamp((e.x > u.x ? 1 : -1) * 16, -16, 16); burst(e.x, e.y - 30, u.d.col, 30); });
+}
+const CAR_COL = ['#c4102a', '#2a5bd7', '#f2c24e', '#2e8b57', '#f4f4f4', '#7a3fb8', '#ff8a3d'];
+function trafHit(o, isHero, dir, horiz) {
+  if ((o.trafT || 0) > 0) return; o.trafT = 1.2;
+  if (horiz) { o.y += (o.y < advTraf(advGeo()).ry ? -1 : 1) * 46; } else o.x += (o.x < advTraf(advGeo()).mx ? -1 : 1) * 56;
+  if (isHero) { advHurtH(o, o.max * .18, null); txt(o.x, o.y - 140, horiz ? 'ATROPELADO!' : 'APANHOU O METRO!', '#ffc83d', 20, 1.3); }
+  else { advHurtE(o, o.max * (o.boss ? .05 : .45), null); if (!o.boss) o.kb = dir * 16; }
+  shake = Math.max(shake, 7); beep(160, .15, 'square', .05, 70);
+}
+function advTraffic(dt, G) {
+  const A = AV, TF = advTraf(G), all = A.party.filter(u => !u.dead).map(u => [u, true]).concat(A.en.filter(e => !e.dead).map(e => [e, false]));
+  all.forEach(([o]) => o.trafT = Math.max(0, (o.trafT || 0) - dt));
+  // carros: faixa de cima vai para a direita, a de baixo para a esquerda
+  A.carT -= dt;
+  if (A.carT <= 0) { A.carT = 1.6 + Math.random() * 2.4; const d = Math.random() < .5 ? 1 : -1;
+    A.cars.push({ d, x: d > 0 ? -60 : G.ww + 60, y: TF.ry + (d > 0 ? -TF.rh / 4 : TF.rh / 4), v: 150 + Math.random() * 110, c: pick(CAR_COL), k: Math.random() < .2 ? 'bus' : 'car', honk: 0 }); }
+  for (let i = A.cars.length - 1; i >= 0; i--) {
+    const c = A.cars[i], len = c.k === 'bus' ? 92 : 50; c.x += c.d * c.v * dt; c.honk -= dt;
+    all.forEach(([o, h]) => { if (Math.abs(o.y - c.y) < 18 && Math.abs(o.x - c.x) < len / 2 + 8) { if (h && c.honk <= 0 && Math.abs(c.x - camX()) < W) { c.honk = 3; beep(420, .12, 'square', .04); setTimeout(() => beep(420, .12, 'square', .04), 160); } trafHit(o, h, c.d, true); } });
+    if (c.x < -150 || c.x > G.ww + 150) A.cars.splice(i, 1);
+  }
+  // metro: aviso a piscar e campainha, depois passa de cima para baixo
+  if (!A.train) { A.trainT -= dt; if (A.trainT <= 0) A.train = { y: G.gy - 380, warn: 1.8, len: 300, v: 430, rang: 0 }; }
+  else {
+    const t = A.train;
+    if (t.warn > 0) { t.warn -= dt; t.rang -= dt; if (t.rang <= 0) { t.rang = .45; beep(1250, .09, 'triangle', .05); } }
+    else { t.y += t.v * dt;
+      all.forEach(([o, h]) => { if (Math.abs(o.x - TF.mx) < TF.mw / 2 + 4 && o.y > t.y - t.len && o.y < t.y + 10) trafHit(o, h, o.x < TF.mx ? -1 : 1, false); });
+      if (t.y - t.len > G.y1 + 40) { A.train = null; A.trainT = 11 + Math.random() * 8; } }
+  }
+}
+const camX = () => AV ? AV.cam + W / 2 : 0;
+function drawTrafficGround(G) {
+  const TF = advTraf(G), A = AV, x0 = A.cam - 20, x1 = A.cam + W + 20;
+  // estrada
+  g.fillStyle = '#b9b2a2'; g.fillRect(x0, TF.ry - TF.rh / 2 - 8, x1 - x0, TF.rh + 16);
+  g.fillStyle = '#4a4752'; g.fillRect(x0, TF.ry - TF.rh / 2, x1 - x0, TF.rh);
+  g.fillStyle = '#f2e6b0'; for (let x = Math.floor(x0 / 60) * 60; x < x1; x += 60) g.fillRect(x, TF.ry - 2, 32, 4);
+  // passadeira junto à biblioteca
+  const zx = advSt(G).lx - 120; g.fillStyle = '#f4f4f4'; for (let i = 0; i < 7; i++) g.fillRect(zx - 30, TF.ry - TF.rh / 2 + 4 + i * 10, 60, 6);
+  // linha de metro: brita, travessas e carris
+  const top = G.gy, bot = G.y1 + 40;
+  g.fillStyle = '#8f8a80'; g.fillRect(TF.mx - TF.mw / 2, top, TF.mw, bot - top);
+  g.fillStyle = '#6d4b2e'; for (let y = top + 6; y < bot; y += 16) g.fillRect(TF.mx - TF.mw / 2 + 6, y, TF.mw - 12, 6);
+  g.fillStyle = '#c9ccd3'; g.fillRect(TF.mx - 17, top, 4, bot - top); g.fillRect(TF.mx + 13, top, 4, bot - top);
+  // cruzamento com a estrada
+  g.fillStyle = '#4a4752'; g.fillRect(TF.mx - TF.mw / 2, TF.ry - TF.rh / 2, TF.mw, TF.rh); g.fillStyle = '#c9ccd3'; g.fillRect(TF.mx - 17, TF.ry - TF.rh / 2, 4, TF.rh); g.fillRect(TF.mx + 13, TF.ry - TF.rh / 2, 4, TF.rh);
+  // sinal da estação "M"
+  const sy = G.y0 + 60, warn = A.train && A.train.warn > 0 && Math.sin(T * 14) > 0;
+  L(TF.mx + TF.mw / 2 + 18, sy + 40, TF.mx + TF.mw / 2 + 18, sy - 30, '#26142f', 3);
+  RR(TF.mx + TF.mw / 2 + 4, sy - 58, 28, 28, 6, '#2a5bd7', 2); g.fillStyle = '#fff'; g.font = '18px Bangers, Impact'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('M', TF.mx + TF.mw / 2 + 18, sy - 43);
+  E(TF.mx + TF.mw / 2 + 18, sy - 18, 6, 6, warn ? '#ff3a3a' : '#5a2020', 1.6);
+}
+function drawCar(c) {
+  const len = c.k === 'bus' ? 92 : 50, h = c.k === 'bus' ? 34 : 22, x = c.x, y = c.y;
+  g.save(); g.translate(x, y); if (c.d < 0) g.scale(-1, 1);
+  E(0, 2, len / 2 + 4, 5, 'rgba(0,0,0,.25)', 0);
+  E(-len / 2 + 12, -2, 7, 7, '#26142f'); E(len / 2 - 12, -2, 7, 7, '#26142f');
+  if (c.k === 'bus') { RR(-len / 2, -h - 4, len, h, 6, '#f2a43a'); RR(-len / 2 + 4, -h + 2, len - 16, 10, 2, '#9fd8f0', 1.4); g.save(); g.scale(c.d < 0 ? -1 : 1, 1); g.fillStyle = '#26142f'; g.font = '9px Bangers, Impact'; g.textAlign = 'center'; g.fillText('STCP', 0, -10); g.restore(); }
+  else { RR(-len / 2, -h + 2, len, h - 8, 6, c.c); RR(-len / 4, -h - 8, len / 2, 12, 5, c.c); RR(-len / 4 + 4, -h - 6, len / 2 - 8, 8, 3, '#9fd8f0', 1.2); }
+  E(len / 2 - 2, -h / 2 + 2, 3, 2.5, '#ffe066', 1);
+  g.restore();
+}
+function drawTrain(G) {
+  const t = AV.train, TF = advTraf(G); if (!t) return;
+  if (t.warn > 0) { if (Math.sin(T * 14) > 0) { g.save(); g.globalAlpha = .35; g.fillStyle = '#ffc83d'; g.fillRect(TF.mx - TF.mw / 2, G.gy, TF.mw, G.y1 - G.gy + 40); g.restore(); } return; }
+  const w = 52, x = TF.mx - w / 2, yb = t.y, yt = t.y - t.len;
+  g.save(); g.beginPath(); g.rect(x - 20, G.gy - 6, w + 40, 99999); g.clip();
+  g.save(); g.shadowColor = 'rgba(0,0,0,.3)'; g.shadowBlur = 10;
+  RR(x, yt, w, t.len, 12, '#f4f4f4', 2.6); g.restore();
+  RR(x, yt, w, t.len, 12, null, 2.6);
+  g.fillStyle = '#ffc83d'; g.fillRect(x + 3, yt + 20, 6, t.len - 40); g.fillRect(x + w - 9, yt + 20, 6, t.len - 40);
+  g.fillStyle = '#26142f'; g.fillRect(x + 2, yt + t.len / 2 - 2, w - 4, 4);
+  for (let y = yt + 26; y < yb - 30; y += 34) RR(x + 12, y, w - 24, 22, 3, '#9fd8f0', 1.4);
+  RR(x + 8, yb - 26, w - 16, 16, 5, '#2a5bd7', 1.8); E(x + 12, yb - 6, 4, 3, '#ffe066', 1.2); E(x + w - 12, yb - 6, 4, 3, '#ffe066', 1.2);
+  g.fillStyle = '#26142f'; g.font = '12px Bangers, Impact'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('METRO', TF.mx, yt + 12);
+  g.restore();
 }
 function advLevelUp() {
   const A = AV; A.lvl++; A.xp = 0; A.glow = 1.4;
@@ -1172,6 +1251,7 @@ function advUpdate(dt) {
       txt(e.x, e.y - eH(e) - 30, { traca: 'NUVEM DE PÓ!', bolor: 'ESPOROS!', rato: 'ROER TUDO!', censor: 'CENSURADO!', queimador: 'FOGUEIRA!', sombra: 'ESQUECE TUDO!' }[e.type], '#ff4fa3', 30, 1.3);
       A.party.forEach(u => { if (!u.dead && Math.hypot(u.x - e.x, u.y - e.y) < 160) { advHurtH(u, e.atk * .7, e); burst(u.x, u.y - 30, '#ff9a1f', 20); } }); } }
   }
+  advTraffic(dt, G);
   A.en = A.en.filter(e => !e.dead && e.x > -200 && e.x < G.ww + 200);
   for (let i = A.dying.length - 1; i >= 0; i--) { const e = A.dying[i], d = e.die; d.t += dt; e.x += d.vx * dt; e.y += d.vy * dt; d.vy += 900 * dt; d.r += d.vr * dt; if (d.t > d.life) A.dying.splice(i, 1); }
   // projécteis
@@ -1249,7 +1329,7 @@ const PROPS = [];
 function advProps(G) {
   const key = G.ww + 'x' + G.y1 + 'x' + G.hx; if (PROPS.G === key) return PROPS; PROPS.length = 0; PROPS.G = key;
   let sd = 1234567; const rnd = () => { sd = (sd + 0x6D2B79F5) | 0; let t = Math.imul(sd ^ (sd >>> 15), 1 | sd); t ^= t + Math.imul(t ^ (t >>> 7), 61 | t); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
-  const S = advSt(G), free = (x, y) => Math.abs(x - S.bx) > 90 && Math.abs(x - S.lx) > 80 || y > S.by + 70;
+  const S = advSt(G), TF = advTraf(G), free = (x, y) => (Math.abs(x - S.bx) > 90 && Math.abs(x - S.lx) > 80 || y > S.by + 70) && Math.abs(y - TF.ry) > TF.rh / 2 + 34 && Math.abs(x - TF.mx) > TF.mw / 2 + 40;
   for (let y = G.y0 + 80; y < G.y1 - 20; y += 95 + rnd() * 40)
     for (let x = 40 + rnd() * 120; x < G.ww - 40; x += 170 + rnd() * 160) {
       const r = rnd(), k = r < .05 ? 'chafariz' : ['banco', 'arvore', 'candeeiro', 'carrinho', 'arvore', 'banco'][Math.floor(rnd() * 6)];
@@ -1280,6 +1360,7 @@ function advRender() {
     if (gy > -22) { const sh = g.createLinearGradient(0, gy, 0, gy + 22); sh.addColorStop(0, 'rgba(38,20,47,.28)'); sh.addColorStop(1, 'rgba(38,20,47,0)'); g.fillStyle = sh; g.fillRect(0, gy, W, 22); }
   } else { g.fillStyle = '#8fd8ea'; g.fillRect(0, 0, W, H); }
   g.save(); g.translate(-A.cam, -A.camY);
+  drawTrafficGround(G);
   drawLib(S.lx, S.zy);
   drawZone(S.bx, S.by, '📄', Math.abs(L.x - S.bx) < 44 && Math.abs(L.y - S.by) < 26);
   drawZone(S.lx, S.zy, '📕', Math.abs(L.x - S.lx) < 44 && Math.abs(L.y - S.zy) < 26);
@@ -1287,9 +1368,10 @@ function advRender() {
   // actores por profundidade
   const act = [];
   A.party.forEach(u => act.push([u.y, 'h', u])); A.en.forEach(e => act.push([e.y, 'e', e])); A.dying.forEach(e => act.push([e.y, 'e', e]));
-  act.push([S.by - 24, 'b', null]); advProps(G).forEach(pp => act.push([pp.y, 'p', pp]));
+  act.push([S.by - 24, 'b', null]); A.cars.forEach(c => act.push([c.y, 'c', c])); advProps(G).forEach(pp => act.push([pp.y, 'p', pp]));
   act.sort((a, b) => a[0] - b[0]).forEach(([, k, o]) => {
     if (k === 'b') { drawBinder(S.bx, S.by); return; }
+    if (k === 'c') { drawCar(o); return; }
     if (k === 'p') { drawProp(o); return; }
     if (k === 'e') { drawEnemy(o, T); if (!o.die && !o.boss && o.hp < o.max) { const hy = o.y - eH(o) - 8; RR(o.x - 14, hy, 28, 5, 2, '#4a3a5a', 1.2); RR(o.x - 14, hy, 28 * Math.max(0, o.hp / o.max), 5, 2, '#ff4fa3', 1.2); }
       if (o.boss && !o.die) { const hy = o.y - eH(o) - 12; RR(o.x - 34, hy, 68, 8, 4, '#4a3a5a', 1.6); RR(o.x - 34, hy, 68 * Math.max(0, o.hp / o.max), 8, 4, '#ff4fa3', 1.6); } return; }
@@ -1301,6 +1383,7 @@ function advRender() {
     if (!u.dead && u.hp < u.max) { const hb = u.y - 125 * hk; RR(u.x - 16, hb, 32, 5, 2, '#4a3a5a', 1.2); RR(u.x - 16, hb, 32 * u.hp / u.max, 5, 2, '#7be07b', 1.2); }
     if (u.dead) { g.font = '18px Bangers, Impact'; g.textAlign = 'center'; g.fillStyle = '#fff'; g.strokeStyle = OUT; g.lineWidth = 4; const s = Math.ceil(u.deadT) + 's'; g.strokeText(s, u.x, u.y - 70); g.fillText(s, u.x, u.y - 70); }
   });
+  drawTrain(G);
   drawProj(A.pr);
   fx.forEach(f => {
     if (f.k === 'fly') { const k = eo(f.t / f.life), x = f.x0 + (f.x1 - f.x0) * k, y = f.y0 + (f.y1 - f.y0) * k - Math.sin(k * Math.PI) * 40; drawItem(f.item, x, y, 1); }
@@ -1342,6 +1425,7 @@ function advHUD(G, S) {
     g.strokeStyle = '#fff'; g.lineWidth = 1.2; g.strokeRect(mx + A.cam * k, my + (A.camY - G.top) * k, W * k, H * k);
     A.drops.forEach(d => { const [a, b] = P2(d.x, d.y); g.fillStyle = '#fff'; g.fillRect(a - 1, b - 1, 2, 2); });
     A.en.forEach(e => { const [a, b] = P2(e.x, e.y); E(a, b, e.boss ? 3.5 : 1.6, e.boss ? 3.5 : 1.6, e.boss ? '#ff4fa3' : '#ff6a6a', 0); });
+    { const TF = advTraf(G); g.fillStyle = 'rgba(74,71,82,.9)'; g.fillRect(mx, my + (TF.ry - G.top) * k - 1.5, mw, 3); g.fillStyle = '#c9ccd3'; g.fillRect(mx + TF.mx * k - 1, my + sy, 2, mh - sy); }
     let [a, b] = P2(S.bx, S.by); E(a, b, 2.6, 2.6, '#2a5bd7', 1); [a, b] = P2(S.lx, S.zy); E(a, b, 2.6, 2.6, '#c4102a', 1);
     [a, b] = P2(L.x, L.y); E(a, b, 3, 3, '#7be07b', 1.2); g.restore(); }
   // dica
