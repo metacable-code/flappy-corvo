@@ -192,7 +192,9 @@ function star(x, y, r1, r2, n, f, rot) { const p = []; for (let i = 0; i < n * 2
 /* ---------- sprites (pasta herois/ ao lado do index.html; se faltarem, usa os desenhos em código) ---------- */
 const SPM = {"quixote":[[200,340,0.479],[340,280,0.371]],"holmes":[[173,340,0.384],[354,312,0.37]],"dracula":[[149,340,0.5],[382,319,0.476]],"alice":[[184,340,0.418],[320,320,0.337]],"nemo":[[202,340,0.457],[333,320,0.331]],"adamastor":[[256,340,0.522],[336,323,0.476]],"traca":[[357,340,0.503],[338,316,0.492]],"rato":[[292,340,0.554],[337,302,0.58]],"bolor":[[380,340,0.496],[418,288,0.662]],"censor":[[219,340,0.605],[334,331,0.46]],"queimador":[[237,340,0.563],[375,310,0.599]],"sombra":[[212,340,0.579],[390,300,0.585]]}; // id: [[w,h,âncoraX] parado, [w,h,âncoraX] ataque]
 const SPR = {};
-Object.keys(SPM).forEach(id => ['i', 'a'].forEach((p, k) => { const im = new Image(); im.onload = () => { im.ok = true; }; im.src = 'herois/' + id + '_' + p + '.webp?v=1'; (SPR[id] = SPR[id] || [])[k] = im; }));
+// aceita a pasta "herois" ou "heróis"
+function imgSrc(im, f) { im.onerror = () => { if (!im.alt) { im.alt = 1; im.src = 'her%C3%B3is/' + f; } }; im.src = 'herois/' + f; }
+Object.keys(SPM).forEach(id => ['i', 'a'].forEach((p, k) => { const im = new Image(); im.onload = () => { im.ok = true; }; imgSrc(im, id + '_' + p + '.webp?v=1'); (SPR[id] = SPR[id] || [])[k] = im; }));
 const eH = e => (sprOK(e.type) ? EH[e.type] / 1.4 + (e.type === 'traca' ? 30 : 0) : (ED[e.type].fly ? 64 : 58)) * e.size * (e.shrinkT > 0 ? .62 : 1);
 const sprOK = id => SPR[id] && SPR[id][0] && SPR[id][0].ok;
 const EH = { traca: 52, rato: 46, bolor: 52, censor: 76, queimador: 74, sombra: 70 }; // altura no ecrã com size 1
@@ -374,7 +376,7 @@ function landmark(kind, x, by, s) {
   g.restore();
 }
 const BGI = {};
-['lello', 'joanina', 'mafra', 'gabinete', 'tombo', 'alex'].forEach(k => { const im = new Image(); im.onload = () => { im.ok = true; }; im.src = 'herois/fundo_' + k + '.webp?v=1'; BGI[k] = im; });
+['lello', 'joanina', 'mafra', 'gabinete', 'tombo', 'alex'].forEach(k => { const im = new Image(); im.onload = () => { im.ok = true; }; imgSrc(im, 'fundo_' + k + '.webp?v=1'); BGI[k] = im; });
 function drawBG(t, scroll, stI) {
   const S = ST[stI], bi = BGI[S.land];
   if (bi && bi.ok) {
