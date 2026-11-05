@@ -484,7 +484,7 @@ function nextWave() {
   if (R.wave === WAVES) {
     q.push({ type: S.boss, boss: true });
     for (let i = 0; i < 3 + R.st; i++) q.push({ type: S.pool[i % S.pool.length] });
-    R.banner = { t: 2.4, txt: '👹 ' + S.bn + '!' };
+    R.banner = { t: 2.4, txt: '👹 ' + S.bn + '!' }; setTimeout(() => { if (R && R.heroes.length) fala(pick(R.heroes), 'boss'); }, 1600);
   } else {
     const n = 4 + R.wave + R.st;
     for (let i = 0; i < n; i++) { const p = S.pool, k = Math.random() < .25 + R.wave * .04 ? p.length - 1 : Math.floor(Math.random() * p.length); q.push({ type: p[k] }); }
@@ -507,6 +507,68 @@ function burst(x, y, col, r) { fx.push({ k: 'burst', x, y, col, r: r || 22, t: 0
 function pages(x, y, n) { for (let i = 0; i < n; i++) parts.push({ x, y, vx: (Math.random() - .5) * 220, vy: -80 - Math.random() * 180, r: Math.random() * 6, vr: (Math.random() - .5) * 12, t: 0, life: 1 + Math.random() * .6 }); }
 function say(h, s) { fx.push({ k: 'say', h, s, t: 0, life: 2 }); }
 
+/* ---------- falas (português de Portugal, ordinário) e vozes ---------- */
+const FALAS = {
+  quixote: {
+    sp: ['Gigantes do caralho, levem com esta!', 'Ao ataque, Rocinante, foda-se!', 'Moinho ou traça, vão todos para o caralho!', 'Pela minha Dulcineia, filhos da puta!'],
+    kill: ['Mais um gigante de merda!', 'Toma, que é para aprenderes!', 'Isto é que é cavalaria, porra!'],
+    ko: ['Ai a minha lança… foda-se.', 'Sancho, ajuda-me, caralho!'],
+    lvl: ['Sou o cavaleiro mais foda da Mancha!'], book: ['Larguem-me deste livro, que eu tenho moinhos para matar!'], boss: ['Aquilo é um gigante, caralho! Eu bem dizia!']
+  },
+  holmes: {
+    sp: ['Elementar, meu caro filho da puta!', 'Caso encerrado, foda-se!', 'Deduzi que vais levar no focinho!'],
+    kill: ['Culpado, caralho!', 'Elementar, porra.', 'Mais um mistério de merda resolvido.'],
+    ko: ['Isto não estava nos meus cálculos, foda-se…', 'Watson, seu inútil, onde estás?'],
+    lvl: ['A minha mente está afiada como o caralho!'], book: ['Finalmente! Estava farto daquele livro, porra.'], boss: ['O culpado é aquele monte de merda!']
+  },
+  dracula: {
+    sp: ['Filhos da noite, vão-se a eles, caralho!', 'Tenho uma sede do caralho!', 'Venham cá, que eu chupo-vos o sangue todo!'],
+    kill: ['Blhé! Sabes a papel, porra!', 'Que sangue de merda!', 'Próximo, caralho!'],
+    ko: ['Merda, apanhei sol…', 'Vou voltar, filhos da puta!'],
+    lvl: ['Mais forte que um vampiro do caralho!'], book: ['Saí do caixão… quer dizer, do livro! Foda-se, que luz!'], boss: ['Esse bicho tem sangue para um mês, porra!']
+  },
+  alice: {
+    sp: ['Bebe-me, cabrão!', 'Cortem-lhes a cabeça, caralho!', 'Encolhe, seu monte de merda!'],
+    kill: ['Cada vez mais curioso, porra!', 'Toma lá, ó chato!', 'Vai para o País das Merdas!'],
+    ko: ['Foda-se, caí no buraco outra vez…', 'Isto é tudo um sonho de merda!'],
+    lvl: ['Cresci, caralho!'], book: ['Saí pela toca do coelho, porra! Onde é que estou?'], boss: ['Aquilo é maior que a Rainha de Copas, foda-se!']
+  },
+  nemo: {
+    sp: ['Torpedo neles, raios os partam!', 'Vinte mil léguas de porrada, caralho!', 'Afundem-se, filhos da puta!'],
+    kill: ['Ao fundo, cabrão!', 'Isso é para os peixes, porra!', 'Mais um para o fundo do mar!'],
+    ko: ['O Nautilus está a meter água, foda-se…', 'Raios me partam!'],
+    lvl: ['Capitão Nemo, mais forte que o caralho!'], book: ['Emergi! E que cheiro a terra de merda!'], boss: ['Aquilo é maior que uma baleia, caralho!']
+  },
+  adamastor: {
+    sp: ['Treme, que eu sou o Adamastor, caralho!', 'Tormenta neles, foda-se!', 'Ninguém passa o meu Cabo, filhos da puta!'],
+    kill: ['Esmagado, porra!', 'Fraquinho como o caralho!', 'Mais um tuga perdido no mar!'],
+    ko: ['Até o Camões ia gozar com isto, foda-se…', 'Volto já, caralho!'],
+    lvl: ['Mais gigante que nunca, porra!'], book: ['Quem me acordou, caralho?! Ah, fui eu.'], boss: ['Pensas que és grande? Olha para mim, cabrão!']
+  },
+};
+const VOZ = { quixote: [.8, .95], holmes: [.7, 1.05], dracula: [.25, .85], alice: [1.6, 1.12], nemo: [.5, .95], adamastor: [.05, .78] };
+const hasTTS = 'speechSynthesis' in window && typeof SpeechSynthesisUtterance !== 'undefined';
+let ptVoice = null, voicesListed = false, ttsUnlocked = false, lastTalk = -9, vozOn = lsGet('herois_voz') !== '0';
+function pickVoice() { if (!hasTTS) return; const vs = speechSynthesis.getVoices() || []; voicesListed = vs.length > 0; ptVoice = vs.find(v => /^pt[-_]PT/i.test(v.lang)) || null; }
+if (hasTTS) { pickVoice(); try { speechSynthesis.addEventListener('voiceschanged', pickVoice); } catch (e) {} }
+addEventListener('pointerdown', () => { if (!hasTTS || ttsUnlocked) return; ttsUnlocked = true; try { const u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u); } catch (e) {} });
+function tts(text, id, force) {
+  if (muted || !vozOn || !hasTTS || (voicesListed && !ptVoice)) return;
+  const now = performance.now() / 1000; if (!force && now - lastTalk < 2.2) return; lastTalk = now;
+  try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text); u.lang = 'pt-PT'; if (ptVoice) u.voice = ptVoice;
+    const v = VOZ[id] || [1, 1]; u.pitch = v[0]; u.rate = v[1]; u.volume = 1; speechSynthesis.speak(u); } catch (e) {}
+}
+const pick = a => a[Math.floor(Math.random() * a.length)];
+// fala: balão + voz. tipo: sp, kill, ko, lvl, book, boss. prob = probabilidade (1 = sempre)
+function fala(h, tipo, prob) {
+  if (!h || (prob != null && Math.random() > prob)) return;
+  const F = FALAS[h.id]; if (!F || !F[tipo]) return;
+  const busy = fx.some(f => f.k === 'say' && f.t < 1.2); if (busy && tipo === 'kill') return;
+  for (let i = fx.length - 1; i >= 0; i--) if (fx[i].k === 'say') fx.splice(i, 1);
+  const s = pick(F[tipo]); fx.push({ k: 'say', h, s, t: 0, life: 2.2 }); tts(s, h.id, tipo === 'sp' || tipo === 'book');
+}
+
+
 /* ---------- dano ---------- */
 function hurtEnemy(e, dmg, h, crit) {
   if (e.dead) return;
@@ -516,7 +578,7 @@ function hurtEnemy(e, dmg, h, crit) {
   if (h && h.d.ls && !h.dead) h.hp = Math.min(h.max, h.hp + dmg * h.d.ls);
   if (h) h.charge = Math.min(100, h.charge + 3);
   if (e.hp <= 0) {
-    e.dead = true; R.earned += e.pg; R.kills++; SFX.kill(); pages(e.x, e.y - 20 * e.size, e.boss ? 40 : 7);
+    e.dead = true; R.earned += e.pg; R.kills++; SFX.kill(); pages(e.x, e.y - 20 * e.size, e.boss ? 40 : 7); if (h) fala(h, 'kill', e.boss ? 1 : .12);
     e.die = { t: 0, life: e.boss ? 1.1 : .6, vx: (e.boss ? 60 : 140) + Math.random() * 90, vy: e.boss ? -200 : -300 - Math.random() * 120, r: 0, vr: (e.boss ? 3 : 9) * (Math.random() < .5 ? -1 : 1) }; R.dying.push(e);
     if (e.boss) hitstop = .3;
     if (Math.random() < .35 || e.boss) txt(e.x, e.y - eH(e) - 20, POW[Math.floor(Math.random() * POW.length)], '#ff4fa3', e.boss ? 40 : 24, 1);
@@ -536,14 +598,14 @@ function hurtHero(h, dmg, src) {
   if (src && src.shrinkT > 0) dmg *= .5; if (h.shield > 0) dmg *= .4;
   dmg = Math.max(1, Math.round(dmg)); h.hp -= dmg; h.hurtT = .12; h.kb = Math.min(10, (h.kb || 0) + 4); h.charge = Math.min(100, h.charge + 2);
   txt(h.x, groundY - 100, '-' + dmg, '#ff6a6a', 15);
-  if (h.hp <= 0) { h.hp = 0; h.dead = true; txt(h.x, groundY - 120, 'K.O.', '#ff4fa3', 26); }
+  if (h.hp <= 0) { h.hp = 0; h.dead = true; txt(h.x, groundY - 120, 'K.O.', '#ff4fa3', 26); fala(h, 'ko', .7); }
 }
 
 /* ---------- especiais ---------- */
 function special(h) {
   if (h.dead || h.charge < 100 || R.phase !== 'fight') return;
   const es = R.en.filter(e => !e.dead); if (!es.length) return;
-  h.charge = 0; SFX.sp(); hitstop = Math.max(hitstop, .07); h.aT = 0; say(h, h.d.say[Math.floor(Math.random() * h.d.say.length)]);
+  h.charge = 0; SFX.sp(); hitstop = Math.max(hitstop, .07); h.aT = 0; fala(h, 'sp');
   fx.push({ k: 'flash', col: h.d.col, t: 0, life: .35 });
   const a = heroAtk(h);
   switch (h.id) {
@@ -730,7 +792,7 @@ function drawHUD() {
   // topo
   g.fillStyle = 'rgba(38,20,47,.82)'; g.fillRect(0, 0, W, 50);
   g.font = '20px Bangers, Impact'; g.textAlign = 'left'; g.textBaseline = 'middle'; g.fillStyle = '#ffc83d';
-  g.fillText(ST[R.st].n.toUpperCase(), 52, 17, W - 190);
+  g.fillText(ST[R.st].n.toUpperCase(), 52, 17, W - 226);
   // progresso das ondas
   for (let i = 0; i < WAVES; i++) { const x = 52 + i * 15; RR(x, 30, 12, 9, 3, i < R.wave - 1 ? '#7be07b' : i === R.wave - 1 ? '#ffc83d' : '#4a3a5a', 1.5); }
   g.font = '15px Nunito'; g.fillStyle = '#fff'; g.fillText('📜 ' + R.earned, 210, 35);
@@ -779,7 +841,15 @@ function drawFX() {
   // explosões estilo banda desenhada
   fx.forEach(f => {
     if (f.k === 'burst') { const k = f.t / f.life; g.save(); g.globalAlpha = 1 - k * .6; star(f.x, f.y, f.r * (.6 + k * .6), f.r * (.3 + k * .3), 9, f.col, f.rot); g.restore(); }
-    else if (f.k === 'say' && !f.h.dead) { const a = Math.min(1, (f.life - f.t) * 3); g.save(); g.globalAlpha = a; g.font = '14px Nunito'; const w = g.measureText(f.s).width + 16, x = AV && MODE !== 'run' ? f.h.x - w / 2 : Math.min(W - w - 4, Math.max(4, f.h.x - 20)), y = (f.h.y || groundY) - 175; RR(x, y, w, 26, 10, '#fff', 2.4); P([f.h.x - 4, y + 26, f.h.x + 6, y + 26, f.h.x, y + 36], '#fff', 0); g.fillStyle = OUT; g.textAlign = 'left'; g.font = '800 13px Nunito'; g.fillText(f.s, x + 8, y + 14); g.restore(); }
+    else if (f.k === 'say' && !f.h.dead) { const a = Math.min(1, (f.life - f.t) * 3, f.t * 8); g.save(); g.globalAlpha = a; g.font = '800 12px Nunito';
+      const adv = AV && MODE !== 'run', words = f.s.split(' '), lines = []; let cur = '';
+      words.forEach(w => { const t = cur ? cur + ' ' + w : w; if (g.measureText(t).width > 190 && cur) { lines.push(cur); cur = w; } else cur = t; }); lines.push(cur);
+      const w = Math.max(...lines.map(l => g.measureText(l).width)) + 18, hh = 10 + lines.length * 15, cam = adv ? AV.cam : 0;
+      const hx = f.h.x, top = adv ? f.h.y - (f.h.id === 'adamastor' ? 150 : 128) : groundY - 175;
+      const x = Math.min(cam + W - w - 4, Math.max(cam + 4, hx - w / 2)), y = top - hh;
+      RR(x, y, w, hh, 10, '#fff', 2.4); P([hx - 5, y + hh, hx + 6, y + hh, hx, y + hh + 9], '#fff', 0);
+      g.beginPath(); g.moveTo(hx - 5, y + hh); g.lineTo(hx, y + hh + 9); g.lineTo(hx + 6, y + hh); g.strokeStyle = OUT; g.lineWidth = 2.4; g.stroke();
+      g.fillStyle = OUT; g.textAlign = 'left'; g.textBaseline = 'middle'; lines.forEach((l, i) => g.fillText(l, x + 9, y + 12 + i * 15)); g.restore(); }
     else if (f.k === 'flash') { g.fillStyle = 'rgba(255,255,255,' + (.35 * (1 - f.t / f.life)) + ')'; g.fillRect(-5000, -5000, 10000 + W, 10000 + H); }
   });
   // textos
@@ -823,9 +893,10 @@ function render() {
 /* ---------- botões do topo e toques ---------- */
 const BTN = [
   { x: 8, y: 8, w: 36, h: 34, fs: 20, label: () => '✕', act: () => { if (quitArm && T - quitArm < 2.5) { quitArm = 0; endRun(false); } else { quitArm = T; txt(W / 2, 110, 'Toca outra vez para desistir', '#fff', 20, 2.2); } } },
-  { x: W - 132, y: 8, w: 40, h: 34, label: () => 'x' + SPD, on: () => SPD > 1, act: () => { SPD = SPD === 1 ? 2 : 1; lsSet('herois_spd', SPD); } },
-  { x: W - 88, y: 8, w: 46, h: 34, fs: 15, label: () => 'AUTO', on: () => AUTO, act: () => { AUTO = !AUTO; lsSet('herois_auto', AUTO ? '1' : '0'); } },
-  { x: W - 38, y: 8, w: 32, h: 34, label: () => muted ? '🔇' : '🔊', act: () => { muted = !muted; lsSet('herois_mute', muted ? '1' : '0'); musSync(); } },
+  { x: W - 168, y: 8, w: 40, h: 34, label: () => 'x' + SPD, on: () => SPD > 1, act: () => { SPD = SPD === 1 ? 2 : 1; lsSet('herois_spd', SPD); } },
+  { x: W - 124, y: 8, w: 46, h: 34, fs: 15, label: () => 'AUTO', on: () => AUTO, act: () => { AUTO = !AUTO; lsSet('herois_auto', AUTO ? '1' : '0'); } },
+  { x: W - 38, y: 8, w: 32, h: 34, label: () => muted ? '🔇' : '🔊', act: () => { muted = !muted; lsSet('herois_mute', muted ? '1' : '0'); musSync(); if (muted && hasTTS) speechSynthesis.cancel(); } },
+  { x: W - 74, y: 8, w: 32, h: 34, label: () => vozOn ? '🗣️' : '🤐', act: () => { vozOn = !vozOn; lsSet('herois_voz', vozOn ? '1' : '0'); if (!vozOn && hasTTS) speechSynthesis.cancel(); } },
 ];
 cv.addEventListener('pointerdown', e => {
   if (MODE === 'adv') return advDown(e);
@@ -967,7 +1038,7 @@ function advHurtE(e, dmg, u, crit) {
   txt(e.x + (Math.random() - .5) * 16, e.y - eH(e) - 6, (crit ? '💥' : '') + dmg, crit ? '#ffc83d' : '#fff', crit ? 20 : 15);
   if (u) { u.charge = Math.min(100, u.charge + 3); if (u.d.ls) u.hp = Math.min(u.max, u.hp + dmg * u.d.ls); }
   if (e.hp <= 0) {
-    e.dead = true; AV.kills++; AV.earned += e.pg; SFX.kill(); pages(e.x, e.y - 20 * e.size, e.boss ? 40 : 6);
+    e.dead = true; AV.kills++; AV.earned += e.pg; SFX.kill(); pages(e.x, e.y - 20 * e.size, e.boss ? 40 : 6); if (u) fala(u, 'kill', e.boss ? 1 : .1);
     const n = e.boss ? 16 : { traca: 1, rato: 1, bolor: 2, censor: 3, queimador: 2, sombra: 2 }[e.type] || 1; advDrop(e.x, e.y, 'f', n);
     if (Math.random() < .35 || e.boss) txt(e.x, e.y - eH(e) - 20, POW[Math.floor(Math.random() * POW.length)], '#ff4fa3', e.boss ? 40 : 24, 1);
     e.die = { t: 0, life: e.boss ? 1.1 : .6, vx: -dir * -1 * ((e.boss ? 60 : 140) + Math.random() * 90), vy: e.boss ? -200 : -300 - Math.random() * 120, r: 0, vr: (e.boss ? 3 : 9) * (Math.random() < .5 ? -1 : 1) };
@@ -981,7 +1052,7 @@ function advHurtH(u, dmg, src) {
   dmg = Math.max(1, Math.round(dmg)); u.hp -= dmg; u.hurtT = .12; u.kb = Math.min(10, (u.kb || 0) + 4); u.charge = Math.min(100, u.charge + 2);
   txt(u.x, u.y - 100, '-' + dmg, '#ff6a6a', 15);
   if (u.hp <= 0) {
-    u.hp = 0; u.dead = true; u.deadT = u === AV.party[0] ? 4 : 6; txt(u.x, u.y - 120, 'K.O.', '#ff4fa3', 26);
+    u.hp = 0; u.dead = true; u.deadT = u === AV.party[0] ? 4 : 6; txt(u.x, u.y - 120, 'K.O.', '#ff4fa3', 26); fala(u, 'ko', .8);
     if (u === AV.party[0] && AV.carry.length) { const n = AV.carry.length; AV.carry.length = 0; advDrop(u.x, u.y, 'f', Math.min(6, n)); txt(u.x, u.y - 150, 'Perdeste a carga!', '#fff', 18, 1.6); }
   }
 }
@@ -999,7 +1070,7 @@ function advSpecial() {
   if (!u || u.dead || u.charge < 100) return;
   const es = A.en.filter(e => !e.dead && Math.abs(e.x - u.x) < 190 && Math.abs(e.y - u.y) < 110);
   u.charge = 0; SFX.sp(); hitstop = Math.max(hitstop, .08); u.aT = 0; shake = 12;
-  fx.push({ k: 'say', h: u, s: u.d.say[Math.floor(Math.random() * u.d.say.length)], t: 0, life: 2 });
+  fala(u, 'sp');
   fx.push({ k: 'ring', x: u.x, y: u.y - 30, col: u.d.col, t: 0, life: .45 });
   es.forEach(e => { advHurtE(e, u.atkBase * 3.5, u, true); e.kb = clamp((e.x > u.x ? 1 : -1) * 16, -16, 16); burst(e.x, e.y - 30, u.d.col, 30); });
 }
@@ -1007,7 +1078,7 @@ function advLevelUp() {
   const A = AV; A.lvl++; A.xp = 0; A.glow = 1.4;
   A.party.forEach(u => { advStats(u, true); u.dead = false; });
   const L = A.party[0]; SFX.win(); hitstop = .15;
-  txt(L.x, L.y - 150, 'SUBIU DE NÍVEL!', '#ffc83d', 30, 1.8); fx.push({ k: 'ring', x: L.x, y: L.y - 40, col: '#ffc83d', t: 0, life: .6 });
+  txt(L.x, L.y - 150, 'SUBIU DE NÍVEL!', '#ffc83d', 30, 1.8); setTimeout(() => fala(L, 'lvl'), 700); fx.push({ k: 'ring', x: L.x, y: L.y - 40, col: '#ffc83d', t: 0, life: .6 });
   for (let i = 0; i < 14; i++) burst(L.x + (Math.random() - .5) * 60, L.y - 20 - Math.random() * 90, '#fff6a8', 10 + Math.random() * 10);
 }
 function advSummon(S) {
@@ -1015,7 +1086,7 @@ function advSummon(S) {
   if (!id || A.party.length >= AV_MAXP) { A.earned += 100; A.banner = { t: 2, txt: '+100 📜' }; return; }
   if (!SV.u[id]) { SV.u[id] = 1; A.unlocked.push(id); save(); }
   const u = advUnit(id); advStats(u, true); u.x = S.lx; u.y = S.zy + 20; u.flip = false; A.party.push(u);
-  A.banner = { t: 2.8, txt: '📖 ' + HD[id].n + ' saiu do livro!' }; SFX.win(); shake = 10;
+  A.banner = { t: 2.8, txt: '📖 ' + HD[id].n + ' saiu do livro!' }; SFX.win(); shake = 10; setTimeout(() => fala(u, 'book'), 500);
   fx.push({ k: 'ring', x: u.x, y: u.y - 50, col: '#fff6a8', t: 0, life: .7 }); for (let i = 0; i < 18; i++) burst(u.x + (Math.random() - .5) * 70, u.y - Math.random() * 120, '#ffc83d', 10 + Math.random() * 12);
 }
 function advBookIn(S) {
@@ -1069,7 +1140,7 @@ function advUpdate(dt) {
   A.spawnT -= dt;
   const maxE = 3 + Math.min(6, A.lvl);
   if (A.spawnT <= 0 && A.en.length < maxE) { A.spawnT = 1.4 + Math.random() * 1.4; advSpawn(false); }
-  if (!A.bossOut && A.books >= 10 + (A.bossBeat || 0) * 14) { A.bossOut = true; advSpawn(true); A.banner = { t: 3, txt: '⚠️ ' + ST[A.st].bn + '!' }; }
+  if (!A.bossOut && A.books >= 10 + (A.bossBeat || 0) * 14) { A.bossOut = true; advSpawn(true); A.banner = { t: 3, txt: '⚠️ ' + ST[A.st].bn + '!' }; setTimeout(() => AV && fala(AV.party[0], 'boss'), 1500); }
   for (const e of A.en) {
     if (e.dead) continue;
     e.hitT = Math.max(0, e.hitT - dt); e.slowT -= dt; e.shrinkT -= dt; e.markT -= dt; e.kb *= Math.exp(-dt * 10);
@@ -1239,13 +1310,14 @@ function advRender() {
 }
 const ADV_BTN = () => [
   { x: 8, y: 8, w: 36, h: 34, fs: 20, label: () => '✕', act: () => { if (AV.quit && T - AV.quit < 2.5) advEnd(); else { AV.quit = T; txt(AV.party[0].x, AV.party[0].y - 160, 'Toca outra vez para sair', '#fff', 20, 2.2); } } },
-  { x: W - 38, y: 8, w: 32, h: 34, label: () => muted ? '🔇' : '🔊', act: () => { muted = !muted; lsSet('herois_mute', muted ? '1' : '0'); musSync(); } },
+  { x: W - 38, y: 8, w: 32, h: 34, label: () => muted ? '🔇' : '🔊', act: () => { muted = !muted; lsSet('herois_mute', muted ? '1' : '0'); musSync(); if (muted && hasTTS) speechSynthesis.cancel(); } },
+  { x: W - 74, y: 8, w: 32, h: 34, label: () => vozOn ? '🗣️' : '🤐', act: () => { vozOn = !vozOn; lsSet('herois_voz', vozOn ? '1' : '0'); if (!vozOn && hasTTS) speechSynthesis.cancel(); } },
 ];
 const SPB = () => ({ x: W - 58, y: H - 78, r: 40 });
 function advHUD(G, S) {
   const A = AV, L = A.party[0];
   g.fillStyle = 'rgba(38,20,47,.82)'; g.fillRect(0, 0, W, 50);
-  g.font = '18px Bangers, Impact'; g.textAlign = 'left'; g.textBaseline = 'middle'; g.fillStyle = '#ffc83d'; g.fillText('AVENTURA · ' + ST[A.st].n.toUpperCase(), 52, 15, W - 130);
+  g.font = '18px Bangers, Impact'; g.textAlign = 'left'; g.textBaseline = 'middle'; g.fillStyle = '#ffc83d'; g.fillText('AVENTURA · ' + ST[A.st].n.toUpperCase(), 52, 15, W - 140);
   // nível e barra de livros
   RR(52, 28, 34, 16, 6, '#ffc83d', 1.6); g.fillStyle = OUT; g.font = '13px Bangers, Impact'; g.textAlign = 'center'; g.fillText('NV ' + A.lvl, 69, 37);
   RR(92, 31, 90, 10, 5, '#4a3a5a', 1.4); RR(92, 31, 90 * A.xp / advNeed(A.lvl), 10, 5, '#7be07b', 1.4);
