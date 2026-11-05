@@ -1093,6 +1093,9 @@ function advSpecial() {
   fx.push({ k: 'ring', x: u.x, y: u.y - 30, col: u.d.col, t: 0, life: .45 });
   es.forEach(e => { advHurtE(e, u.atkBase * 3.5, u, true); e.kb = clamp((e.x > u.x ? 1 : -1) * 16, -16, 16); burst(e.x, e.y - 30, u.d.col, 30); });
 }
+const VEI = {};
+['car_red', 'car_blue', 'car_yellow', 'car_green', 'bus', 'metro'].forEach(k => { const im = new Image(); im.onload = () => { im.ok = true; }; imgSrc(im, k + '.webp?v=1'); VEI[k] = im; });
+const CAR_SPR = ['car_red', 'car_blue', 'car_yellow', 'car_green'];
 const CAR_COL = ['#c4102a', '#2a5bd7', '#f2c24e', '#2e8b57', '#f4f4f4', '#7a3fb8', '#ff8a3d'];
 function trafHit(o, isHero, dir, horiz) {
   if ((o.trafT || 0) > 0) return; o.trafT = 1.2;
@@ -1107,14 +1110,14 @@ function advTraffic(dt, G) {
   // carros: faixa de cima vai para a direita, a de baixo para a esquerda
   A.carT -= dt;
   if (A.carT <= 0) { A.carT = 1.6 + Math.random() * 2.4; const d = Math.random() < .5 ? 1 : -1;
-    A.cars.push({ d, x: d > 0 ? -60 : G.ww + 60, y: TF.ry + (d > 0 ? -TF.rh / 4 : TF.rh / 4), v: 150 + Math.random() * 110, c: pick(CAR_COL), k: Math.random() < .2 ? 'bus' : 'car', honk: 0 }); }
+    A.cars.push({ d, x: d > 0 ? -60 : G.ww + 60, y: TF.ry + (d > 0 ? -TF.rh / 4 : TF.rh / 4), v: 150 + Math.random() * 110, c: pick(CAR_COL), spr: pick(CAR_SPR), k: Math.random() < .2 ? 'bus' : 'car', honk: 0 }); }
   for (let i = A.cars.length - 1; i >= 0; i--) {
     const c = A.cars[i], len = c.k === 'bus' ? 92 : 50; c.x += c.d * c.v * dt; c.honk -= dt;
     all.forEach(([o, h]) => { if (Math.abs(o.y - c.y) < 18 && Math.abs(o.x - c.x) < len / 2 + 8) { if (h && c.honk <= 0 && Math.abs(c.x - camX()) < W) { c.honk = 3; beep(420, .12, 'square', .04); setTimeout(() => beep(420, .12, 'square', .04), 160); } trafHit(o, h, c.d, true); } });
     if (c.x < -150 || c.x > G.ww + 150) A.cars.splice(i, 1);
   }
   // metro: aviso a piscar e campainha, depois passa de cima para baixo
-  if (!A.train) { A.trainT -= dt; if (A.trainT <= 0) A.train = { y: G.gy - 380, warn: 1.8, len: 300, v: 430, rang: 0 }; }
+  if (!A.train) { A.trainT -= dt; if (A.trainT <= 0) A.train = { y: G.gy - 380, warn: 1.8, len: VEI.metro.ok ? Math.round(56 * VEI.metro.height / VEI.metro.width) : 300, v: 430, rang: 0 }; }
   else {
     const t = A.train;
     if (t.warn > 0) { t.warn -= dt; t.rang -= dt; if (t.rang <= 0) { t.rang = .45; beep(1250, .09, 'triangle', .05); } }
@@ -1146,6 +1149,12 @@ function drawTrafficGround(G) {
   E(TF.mx + TF.mw / 2 + 18, sy - 18, 6, 6, warn ? '#ff3a3a' : '#5a2020', 1.6);
 }
 function drawCar(c) {
+  const im = VEI[c.k === 'bus' ? 'bus' : c.spr];
+  if (im && im.ok) {  // carros desenhados virados para a esquerda, autocarro para a direita
+    const w = c.k === 'bus' ? 104 : 60, h = w * im.height / im.width, flip = c.k === 'bus' ? c.d < 0 : c.d > 0;
+    g.save(); g.translate(c.x, c.y); E(0, 2, w / 2, 5, 'rgba(0,0,0,.25)', 0); if (flip) g.scale(-1, 1);
+    g.drawImage(im, -w / 2, -h + 4, w, h); g.restore(); return;
+  }
   const len = c.k === 'bus' ? 92 : 50, h = c.k === 'bus' ? 34 : 22, x = c.x, y = c.y;
   g.save(); g.translate(x, y); if (c.d < 0) g.scale(-1, 1);
   E(0, 2, len / 2 + 4, 5, 'rgba(0,0,0,.25)', 0);
@@ -1160,6 +1169,7 @@ function drawTrain(G) {
   if (t.warn > 0) { if (Math.sin(T * 14) > 0) { g.save(); g.globalAlpha = .35; g.fillStyle = '#ffc83d'; g.fillRect(TF.mx - TF.mw / 2, G.gy, TF.mw, G.y1 - G.gy + 40); g.restore(); } return; }
   const w = 52, x = TF.mx - w / 2, yb = t.y, yt = t.y - t.len;
   g.save(); g.beginPath(); g.rect(x - 20, G.gy - 6, w + 40, 99999); g.clip();
+  if (VEI.metro.ok) { const mw = 56; g.save(); g.shadowColor = 'rgba(0,0,0,.35)'; g.shadowBlur = 12; g.drawImage(VEI.metro, TF.mx - mw / 2, yt, mw, t.len); g.restore(); g.restore(); return; }
   g.save(); g.shadowColor = 'rgba(0,0,0,.3)'; g.shadowBlur = 10;
   RR(x, yt, w, t.len, 12, '#f4f4f4', 2.6); g.restore();
   RR(x, yt, w, t.len, 12, null, 2.6);
