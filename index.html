@@ -3527,7 +3527,7 @@ let herFrame = null;
 function herLvl() { try { const o = JSON.parse(lsGetS('herois_s') || 'null'); return o ? Object.values(o.best || {}).filter(v => v >= 10).length : 0; } catch (e) { return 0; } }
 function startHerois() {
   menuEl.classList.add('hidden'); homeBtn.classList.add('hidden'); GAME = 'herois'; bibWrap.classList.remove('hidden');
-  herFrame = document.createElement('iframe'); herFrame.setAttribute('allow', 'autoplay'); herFrame.src = 'herois.html?v=1'; bibWrap.appendChild(herFrame);
+  herFrame = document.createElement('iframe'); herFrame.setAttribute('allow', 'autoplay'); herFrame.src = 'herois.html?v=2'; bibWrap.appendChild(herFrame);
 }
 function closeHerois() { bibWrap.classList.add('hidden'); if (herFrame) { herFrame.remove(); herFrame = null; } openMenu(); }
 window.addEventListener('message', e => {
