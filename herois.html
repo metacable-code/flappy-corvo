@@ -203,6 +203,25 @@ function sprDraw(id, pose, dh) {
   const im = SPR[id][pose] && SPR[id][pose].ok ? SPR[id][pose] : SPR[id][0], m = SPM[id][im === SPR[id][0] ? 0 : 1], k = dh / SPM[id][0][1];
   g.drawImage(im, -m[2] * m[0] * k, -m[1] * k, m[0] * k, m[1] * k);
 }
+/* ---------- animações fotograma a fotograma (vídeos do Veo) ---------- */
+const SPA = { quixote: {"idle":{"fw":200,"fh":306,"n":12,"cols":6,"ax":91.0,"fy":304.6,"ih":300.0},"walk":{"fw":321,"fh":293,"n":12,"cols":6,"ax":130.8,"fy":290.9,"ih":284.9},"atk":{"fw":542,"fh":305,"n":18,"cols":6,"ax":137.5,"fy":303.6,"ih":300.0,"strike":9}} };
+Object.keys(SPA).forEach(id => Object.keys(SPA[id]).forEach(k => { const a = SPA[id][k], im = new Image(); im.onload = () => { a.ok = true; }; imgSrc(im, id + '_' + k + '.webp?v=1'); a.img = im; }));
+const animOK = id => !!(SPA[id] && SPA[id].idle.ok && SPA[id].atk.ok);
+const ATK_DUR = .62;
+const aStrike = id => animOK(id) ? SPA[id].atk.strike / SPA[id].atk.n * ATK_DUR : STRIKE;
+const aDur = id => animOK(id) ? ATK_DUR : ANIM;
+function animDraw(a, i, dh) {          // pés em (0,0); dh = altura da pose parada no ecrã
+  const k = dh / a.ih, c = i % a.cols, r = Math.floor(i / a.cols);
+  g.drawImage(a.img, c * a.fw, r * a.fh, a.fw, a.fh, -a.ax * k, -a.fy * k, a.fw * k, a.fh * k);
+}
+function heroAnim(id, t, st) {
+  const A = SPA[id], ph = id.length * 1.7;
+  if (!st.dead && st.aT != null && st.aT < ATK_DUR) return animDraw(A.atk, Math.min(A.atk.n - 1, Math.floor(st.aT / ATK_DUR * A.atk.n)), 68);
+  if (!st.dead && st.walk && A.walk.ok) return animDraw(A.walk, Math.floor(t * 13 + ph) % A.walk.n, 68);
+  const n = A.idle.n, L = 2 * n - 2, j = Math.floor(t * 8 + ph) % L;
+  animDraw(A.idle, st.dead ? 0 : (j < n ? j : L - j), 68);
+}
+
 /* heróis: desenhados virados para a direita, pés em (0,0) */
 function legs(c, w, ph, len) { const a = Math.sin(ph) * 4; L(-4 - a, 0, -4, -(len || 15), c, w || 4.5); L(4 + a, 0, 4, -(len || 15), c, w || 4.5); }
 const DRAW_H = {
@@ -312,7 +331,8 @@ function drawHero(id, x, y, sc, t, st) {
   g.save(); g.translate(x, y); E(0, 1, 14 * sc, 3.5 * sc, 'rgba(0,0,0,.2)', 0); g.scale(sc, sc);
   if (st.dead) { g.globalAlpha = .45; g.rotate(-1.35); g.translate(18, 4); }
   if (st.hurt) { g.translate(-2, 0); g.filter = 'brightness(1.7)'; }
-  if (sprOK(id)) {
+  if (animOK(id)) { if (!st.dead) g.translate(-(st.kb || 0) / sc, 0); heroAnim(id, t, st); }
+  else if (sprOK(id)) {
     const ph = id.length * 1.7, w = st.walk || 0;
     if (w && !st.dead) { g.translate(0, -Math.abs(Math.sin(w)) * 2.5); g.rotate(Math.sin(w) * .05); }
     else if (!st.dead) { const b = Math.sin(t * 3 + ph); g.scale(1 - b * .012, 1 + b * .022); }
@@ -562,14 +582,14 @@ function update(dt) {
     h.atkT = Math.max(0, h.atkT - dt); h.hurtT = Math.max(0, h.hurtT - dt); h.shield = Math.max(0, h.shield - dt);
     h.kb = (h.kb || 0) * Math.exp(-dt * 12);
     if (h.dead) continue;
-    if (h.aT != null && h.aT < ANIM) { const pv = h.aT; h.aT += dt; if (pv < STRIKE && h.aT >= STRIKE && h.pend) { heroStrike(h, h.pend); h.pend = null; } }
+    if (h.aT != null && h.aT < aDur(h.id)) { const pv = h.aT, sT = aStrike(h.id); h.aT += dt; if (pv < sT && h.aT >= sT && h.pend) { heroStrike(h, h.pend); h.pend = null; } }
     h.charge = Math.min(100, h.charge + dt * 100 / 10);
     if (h.dash > 0) { h.dash -= dt; h.x = h.hx + Math.sin((1 - h.dash / .45) * Math.PI) * 70; } else h.x += (h.hx - h.x) * Math.min(1, dt * 6);
     let tgt = null, bd = 1e9;
     for (const e of es) if (!e.dead && e.x < W + 5) { const d = e.x - h.x; if (d > -20 && d < bd) { bd = d; tgt = e; } }
     h.cdT -= dt;
     if (tgt && bd <= h.d.rng + tgt.size * 8 && h.cdT <= 0) {
-      h.cdT = h.d.cd * (.92 + Math.random() * .16); h.atkT = ANIM; h.aT = 0;
+      h.cdT = Math.max(h.d.cd * (.92 + Math.random() * .16), aDur(h.id) + .05); h.atkT = aDur(h.id); h.aT = 0;
       const a = heroAtk(h), crit = h.d.crit && Math.random() < h.d.crit;
       h.pend = { tgt, crit, dmg: a * (crit ? 2.5 : 1) };
     }
@@ -758,8 +778,8 @@ function render() {
   R.heroes.slice().sort((a, b) => a.x - b.x).forEach(h => {
     const sc = h.id === 'adamastor' ? 2.15 : 1.8;
     if (h.shield > 0 && !h.dead) { g.save(); g.globalAlpha = .35 + .15 * Math.sin(T * 10); E(h.x, groundY - 50, 40, 60, '#9fe0ff', 0); g.restore(); }
-    if (h.dash > 0 && !h.dead) for (let k = 3; k >= 1; k--) { g.save(); g.globalAlpha = .18 * (4 - k) / 3; drawHero(h.id, h.x - k * 16, groundY, sc, T, { atk: true, sc }); g.restore(); }
-    drawHero(h.id, h.x, groundY, sc, T, { walk: R.phase === 'walk' ? h.walk : 0, dead: h.dead, atk: atkPose(h.aT) || h.dash > 0, hurt: h.hurtT > 0, ox: atkOff(h.aT, h.d.rng > 120 ? 6 : 14), sq: atkSquash(h.aT), kb: h.kb, sc });
+    if (h.dash > 0 && !h.dead) for (let k = 3; k >= 1; k--) { g.save(); g.globalAlpha = .18 * (4 - k) / 3; drawHero(h.id, h.x - k * 16, groundY, sc, T, { atk: true, aT: h.aT, sc }); g.restore(); }
+    drawHero(h.id, h.x, groundY, sc, T, { walk: R.phase === 'walk' ? h.walk : 0, dead: h.dead, atk: atkPose(h.aT) || h.dash > 0, aT: h.aT, hurt: h.hurtT > 0, ox: animOK(h.id) ? 0 : atkOff(h.aT, h.d.rng > 120 ? 6 : 14), sq: animOK(h.id) ? null : atkSquash(h.aT), kb: h.kb, sc });
     if (!h.dead && h.hp < h.max) { const hb = groundY - (h.id === 'adamastor' ? 165 : 125); RR(h.x - 18, hb, 36, 6, 3, '#4a3a5a', 1.2); RR(h.x - 18, hb, 36 * h.hp / h.max, 6, 3, '#7be07b', 1.2); }
   });
   R.dying.forEach(e => drawEnemy(e, T));
