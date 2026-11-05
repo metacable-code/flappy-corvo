@@ -780,7 +780,7 @@ function drawFX() {
   fx.forEach(f => {
     if (f.k === 'burst') { const k = f.t / f.life; g.save(); g.globalAlpha = 1 - k * .6; star(f.x, f.y, f.r * (.6 + k * .6), f.r * (.3 + k * .3), 9, f.col, f.rot); g.restore(); }
     else if (f.k === 'say' && !f.h.dead) { const a = Math.min(1, (f.life - f.t) * 3); g.save(); g.globalAlpha = a; g.font = '14px Nunito'; const w = g.measureText(f.s).width + 16, x = AV && MODE !== 'run' ? f.h.x - w / 2 : Math.min(W - w - 4, Math.max(4, f.h.x - 20)), y = (f.h.y || groundY) - 175; RR(x, y, w, 26, 10, '#fff', 2.4); P([f.h.x - 4, y + 26, f.h.x + 6, y + 26, f.h.x, y + 36], '#fff', 0); g.fillStyle = OUT; g.textAlign = 'left'; g.font = '800 13px Nunito'; g.fillText(f.s, x + 8, y + 14); g.restore(); }
-    else if (f.k === 'flash') { g.fillStyle = 'rgba(255,255,255,' + (.35 * (1 - f.t / f.life)) + ')'; g.fillRect(-5000, 0, 10000 + W, H); }
+    else if (f.k === 'flash') { g.fillStyle = 'rgba(255,255,255,' + (.35 * (1 - f.t / f.life)) + ')'; g.fillRect(-5000, -5000, 10000 + W, 10000 + H); }
   });
   // textos
   texts.forEach(o => { const a = Math.min(1, (o.life - o.t) * 4), ps = o.t < .14 ? 1.7 - .7 * eo(o.t / .14) : 1; g.save(); g.globalAlpha = a; g.translate(o.x, o.y); g.scale(ps, ps); g.translate(-o.x, -o.y); g.font = o.size + 'px Bangers, Impact'; g.textAlign = 'center'; g.lineWidth = Math.max(3, o.size / 5); g.strokeStyle = OUT; g.strokeText(o.s, o.x, o.y); g.fillStyle = o.col; g.fillText(o.s, o.x, o.y); g.restore(); });
@@ -898,11 +898,19 @@ $('eHome').onclick = goHome;
 /* ====================== MODO AVENTURA ====================== */
 const AV_SUMMON = [3, 8, 15, 24, 35], AV_MAXP = 4, KEYS = {};
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-function advTiles() {               // fundos lado a lado: o do nível primeiro, depois os outros disponíveis
-  const first = ST[AV ? AV.st : (SV.sel || 0)].land, ks = [first].concat(Object.keys(BGI).filter(k => k !== first));
-  const t = ks.map(k => BGI[k]).filter(b => b && b.ok); return t.length ? t : null;
+/* mapas da Aventura: fundos em fila; '~' = o mesmo fundo em espelho; o nível tem a casa na 'land' */
+const MAPS = { lello: ['porto_clerigos', 'lello', 'porto_clerigos~'] };
+const XTI = {};
+['porto_clerigos', 'porto_saobento', 'porto_capela', 'porto_aliados', 'porto_ribeira', 'porto_ponte', 'porto_se', 'porto_bolhao'].forEach(k => { const im = new Image(); im.onload = () => { im.ok = true; }; imgSrc(im, k + '.webp?v=1'); XTI[k] = im; });
+function advTiles() {               // devolve [{im, flip, home}]
+  const land = ST[AV ? AV.st : (SV.sel || 0)].land, get = k => BGI[k] || XTI[k];
+  let ks = MAPS[land] || [land].concat(Object.keys(BGI).filter(k => k !== land));
+  let t = ks.map(k => { const f = k.endsWith('~'), n = f ? k.slice(0, -1) : k, im = get(n); return im && im.ok ? { im, flip: f, home: n === land && !f } : null; }).filter(Boolean);
+  if (!t.some(o => o.home) && BGI[land] && BGI[land].ok) t.unshift({ im: BGI[land], flip: false, home: true });
+  if (t.length === 1) t.push({ im: t[0].im, flip: true });
+  return t.length ? t : null;
 }
-function advBG() { const t = advTiles(); return t ? t[0] : null; }
+function advBG() { const t = advTiles(); return t ? t[0].im : null; }
 const ASC = 1.25, ASR = .75;         // escala dos bonecos e do alcance na Aventura
 let CALC = null;
 function calcada() {                 // padrão de calçada portuguesa (ondas)
@@ -918,33 +926,35 @@ function calcada() {                 // padrão de calçada portuguesa (ondas)
   CALC = c; return c;
 }
 function advGeo() {
-  const top = 50, hd = Math.round((H - top) * .5), t = advTiles(), wd = t ? hd * t[0].width / t[0].height : 1100, n = t ? Math.max(2, t.length) : 2;
-  return { top, hd, wd, ww: wd * n, n, gy: top + hd * .93, y0: top + .885 * hd, y1: H - 26 };
+  const top = 50, hd = Math.round((H - top) * .5), t = advTiles(), wd = Math.round(t ? hd * 2.357 : 1100), n = t ? t.length : 2, hi = t ? Math.max(0, t.findIndex(o => o.home)) : 0;
+  const deep = Math.round(H * 1.4);
+  return { top, hd, wd, ww: wd * n, n, t, hx: hi * wd, gy: top + hd * .93, y0: top + .885 * hd, y1: H - 26 + deep, wh: H + deep };
 }
 const advCap = () => 8 + 2 * AV.lvl;
 const advNeed = l => 2 + l;
-function advSt(G) { return { bx: G.wd * .5 - 170, by: G.y0 + (G.y1 - G.y0) * .42, lx: G.wd * .5, zy: G.y0 + 14 }; }
+function advSt(G) { return { bx: G.hx + G.wd * .5 - 170, by: G.y0 + 190, lx: G.hx + G.wd * .5, zy: G.y0 + 14 }; }
 function advUnit(id) { const d = HD[id]; const u = { id, d, x: 0, y: 0, hp: 1, max: 1, atkBase: 1, cdT: .3, aT: null, pend: null, kb: 0, hurtT: 0, dead: false, deadT: 0, walk: 0, moving: false, flip: false, charge: 40 }; return u; }
 function advStats(u, heal) { const m = lvlMul(SV.u[u.id] || 1) * (1 + .18 * (AV.lvl - 1)), r = u.max ? u.hp / u.max : 1; u.max = Math.round(u.d.hp * m); u.hp = heal ? u.max : Math.max(1, Math.round(u.max * r)); u.atkBase = u.d.atk * m; }
 function nextSummon() { return ORDER.find(id => !AV.party.some(u => u.id === id)); }
 
 function startAdv() {
   const st = Math.min(SV.sel || 0, SV.unl || 0);
-  AV = { st, party: [], en: [], dying: [], drops: [], pr: [], cam: 0, lvl: 1, xp: 0, books: 0, earned: 0, carry: [], spawnT: 1.5, bossOut: false,
+  AV = { st, party: [], en: [], dying: [], drops: [], pr: [], cam: 0, camY: 0, lvl: 1, xp: 0, books: 0, earned: 0, carry: [], spawnT: 1.5, bossOut: false,
     binder: { inF: 0, out: 0, t: 0 }, xferT: 0, summons: 0, unlocked: [], joy: null, kills: 0, glow: 0, banner: { t: 3, txt: 'Apanha as folhas!' }, quit: 0 };
   const G = advGeo(), S = advSt(G), lead = advUnit(SV.team[0] || 'quixote');
-  advStats(lead, true); lead.x = G.wd * .38; lead.y = G.y0 + (G.y1 - G.y0) * .4; AV.party.push(lead);
+  advStats(lead, true); lead.x = G.hx + G.wd * .38; lead.y = G.y0 + 150; AV.party.push(lead); AV.camY = 0;
   AV.cam = clamp(lead.x - W * .5, 0, Math.max(0, G.ww - W));
   fx.length = texts.length = parts.length = 0; R = null; lastMode = 'adv'; MODE = 'adv'; showScr(null);
 }
 function advSpawn(boss) {
   const A = AV, G = advGeo(), S = ST[A.st];
   const type = boss ? S.boss : S.pool[Math.floor(Math.random() * S.pool.length)], d = ED[type];
-  let side = Math.random() < .5 ? -1 : 1, x = side < 0 ? A.cam - 50 : A.cam + W + 50;
+  let side = Math.random() < .5 ? -1 : 1, x = side < 0 ? A.cam - 50 : A.cam + W + 50, y = A.camY + 120 + Math.random() * (H - 200);
   if (x < 10 || x > G.ww - 10) { side = -side; x = side < 0 ? A.cam - 50 : A.cam + W + 50; }
-  x = clamp(x, 10, G.ww - 10);
+  if (Math.random() < .35) { x = A.cam + 30 + Math.random() * (W - 60); y = Math.random() < .5 || A.camY + H + 60 > G.y1 ? A.camY - 40 : A.camY + H + 60; side = x < A.party[0].x ? -1 : 1; }
+  x = clamp(x, 10, G.ww - 10); y = clamp(y, G.y0, G.y1);
   const m = Math.pow(1.45, A.st) * (1 + .16 * (A.lvl - 1)) * (boss ? 1 : 1), hp = Math.round(d.hp * m * (boss ? 34 : 1));
-  A.en.push({ type, boss: !!boss, name: boss ? S.bn : d.n, x, y: G.y0 + Math.random() * (G.y1 - G.y0), hp, max: hp, atk: d.atk * m * (boss ? 2.6 : 1),
+  A.en.push({ type, boss: !!boss, name: boss ? S.bn : d.n, x, y, hp, max: hp, atk: d.atk * m * (boss ? 2.6 : 1),
     spd: d.spd * (boss ? .6 : .85) * (.9 + Math.random() * .2), rng: d.rng + (boss ? 40 : 14), cd: d.cd * (boss ? 1.2 : 1), cdT: .8, size: boss ? 2 : 1,
     walk: Math.random() * 6, atkT: 0, hitT: 0, slowT: 0, shrinkT: 0, markT: 0, seed: Math.random() * 9, spT: 4, aT: null, kb: 0, flip: side < 0, pg: d.pg * (boss ? 40 : 1) + A.st });
 }
@@ -1030,6 +1040,7 @@ function advUpdate(dt) {
     L.moving = Math.abs(mx) + Math.abs(my) > .05; if (L.moving) { L.walk += dt * 11; if (Math.abs(mx) > .1 && !(L.aT != null && L.aT < aDur(L.id))) L.flip = mx < 0; }
   } else L.moving = false;
   A.cam += (clamp(L.x - W * .5, 0, Math.max(0, G.ww - W)) - A.cam) * Math.min(1, dt * 5);
+  A.camY += (clamp(L.y - H * .58, 0, Math.max(0, G.wh - H)) - A.camY) * Math.min(1, dt * 5);
   // companheiros seguem o líder
   A.party.forEach((u, i) => {
     if (i === 0 || u.dead) return;
@@ -1155,19 +1166,21 @@ function drawLib(x, zy) {
 }
 const PROPS = [];
 function advProps(G) {
-  if (PROPS.G === G.ww + 'x' + G.y1) return PROPS; PROPS.length = 0; PROPS.G = G.ww + 'x' + G.y1;
-  let sd = 7; const rnd = () => (sd = (sd * 9301 + 49297) % 233280) / 233280;
+  const key = G.ww + 'x' + G.y1 + 'x' + G.hx; if (PROPS.G === key) return PROPS; PROPS.length = 0; PROPS.G = key;
+  let sd = 1234567; const rnd = () => { sd = (sd + 0x6D2B79F5) | 0; let t = Math.imul(sd ^ (sd >>> 15), 1 | sd); t ^= t + Math.imul(t ^ (t >>> 7), 61 | t); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
   const S = advSt(G), free = (x, y) => Math.abs(x - S.bx) > 90 && Math.abs(x - S.lx) > 80 || y > S.by + 70;
-  for (let x = 60; x < G.ww - 40; x += 120 + rnd() * 90) {
-    const y = G.y0 + 70 + rnd() * (G.y1 - G.y0 - 90), k = ['banco', 'arvore', 'candeeiro', 'carrinho'][Math.floor(rnd() * 4)];
-    if (free(x, y)) PROPS.push({ k, x, y });
-  }
+  for (let y = G.y0 + 80; y < G.y1 - 20; y += 95 + rnd() * 40)
+    for (let x = 40 + rnd() * 120; x < G.ww - 40; x += 170 + rnd() * 160) {
+      const r = rnd(), k = r < .05 ? 'chafariz' : ['banco', 'arvore', 'candeeiro', 'carrinho', 'arvore', 'banco'][Math.floor(rnd() * 6)];
+      const yy = y + (rnd() - .5) * 40; if (free(x, yy)) PROPS.push({ k, x, y: yy });
+    }
   return PROPS;
 }
 function drawProp(o) {
   const { x, y, k } = o; E(x, y + 2, 20, 5, 'rgba(0,0,0,.18)', 0);
   if (k === 'banco') { L(x - 16, y, x - 16, y - 12, '#3b3946', 3); L(x + 16, y, x + 16, y - 12, '#3b3946', 3); RR(x - 22, y - 16, 44, 6, 2, '#a5703a'); RR(x - 22, y - 30, 44, 6, 2, '#a5703a'); L(x - 18, y - 16, x - 18, y - 30, '#3b3946', 2.5); L(x + 18, y - 16, x + 18, y - 30, '#3b3946', 2.5); }
   else if (k === 'arvore') { RR(x - 12, y - 18, 24, 18, 4, '#c96a3a'); L(x, y - 18, x, y - 40, '#7a4a2a', 4); E(x, y - 54, 20, 18, '#3f8f4a'); E(x - 8, y - 48, 10, 9, '#4fa55a', 0); }
+  else if (k === 'chafariz') { E(x, y - 6, 34, 12, '#9aa3ad'); E(x, y - 10, 28, 9, '#7fc8e8', 1.6); RR(x - 5, y - 36, 10, 26, 3, '#9aa3ad'); E(x, y - 38, 12, 5, '#9aa3ad'); for (let i = -1; i <= 1; i++) { g.beginPath(); g.moveTo(x, y - 40); g.quadraticCurveTo(x + i * 14, y - 54 - Math.sin(T * 6 + i) * 2, x + i * 22, y - 14); g.strokeStyle = 'rgba(160,220,255,.8)'; g.lineWidth = 2; g.stroke(); } }
   else if (k === 'candeeiro') { L(x, y, x, y - 70, '#26142f', 3.5); RR(x - 7, y - 84, 14, 14, 3, '#ffe28a'); P([x - 9, y - 84, x + 9, y - 84, x, y - 92], '#26142f', 2); }
   else { L(x - 14, y, x - 14, y - 4, '#26142f', 3); E(x - 14, y, 4, 4, '#3b3946'); E(x + 14, y, 4, 4, '#3b3946'); RR(x - 22, y - 26, 44, 20, 3, '#7a4a2a'); for (let i = 0; i < 6; i++) RR(x - 19 + i * 6.5, y - 38, 5.5, 14, 1, ['#c4102a', '#2a5bd7', '#2e8b57', '#d9a441', '#7a3fb8', '#f4f4f4'][i], 1.2); }
 }
@@ -1178,12 +1191,14 @@ function advRender() {
   g.save(); g.translate(sx, sy);
   const tiles = advTiles();
   if (tiles) {
-    g.drawImage(tiles[0], 0, 0, tiles[0].width, 3, 0, 0, W, G.top + 1);
-    for (let i = 0; i < G.n; i++) { const im = tiles[i % tiles.length], x = i * G.wd - A.cam; if (x > W || x + G.wd < 0) continue; g.drawImage(im, 0, 0, im.width, im.height * .93, x, G.top, G.wd + 1, G.hd * .93); }
-    g.save(); g.translate(-A.cam, G.gy); g.fillStyle = g.createPattern(calcada(), 'repeat'); g.fillRect(A.cam, 0, W, H - G.gy); g.restore();
-    const sh = g.createLinearGradient(0, G.gy, 0, G.gy + 22); sh.addColorStop(0, 'rgba(38,20,47,.28)'); sh.addColorStop(1, 'rgba(38,20,47,0)'); g.fillStyle = sh; g.fillRect(0, G.gy, W, 22);
+    const cy = A.camY, top = G.top - cy, gy = G.gy - cy;
+    if (top > 0) g.drawImage(tiles[0].im, 0, 0, tiles[0].im.width, 3, 0, 0, W, top + 1);
+    if (gy > 0) for (let i = 0; i < G.n; i++) { const o = tiles[i], im = o.im, x = i * G.wd - A.cam; if (x > W || x + G.wd < 0) continue;
+      g.save(); if (o.flip) { g.translate(2 * x + G.wd, 0); g.scale(-1, 1); } g.drawImage(im, 0, 0, im.width, im.height * .93, x, top, G.wd + 1, G.hd * .93); g.restore(); }
+    const py = Math.max(0, gy); g.save(); g.translate(-A.cam, -cy); g.fillStyle = g.createPattern(calcada(), 'repeat'); g.fillRect(A.cam, py + cy, W, H - py); g.restore();
+    if (gy > -22) { const sh = g.createLinearGradient(0, gy, 0, gy + 22); sh.addColorStop(0, 'rgba(38,20,47,.28)'); sh.addColorStop(1, 'rgba(38,20,47,0)'); g.fillStyle = sh; g.fillRect(0, gy, W, 22); }
   } else { g.fillStyle = '#8fd8ea'; g.fillRect(0, 0, W, H); }
-  g.save(); g.translate(-A.cam, 0);
+  g.save(); g.translate(-A.cam, -A.camY);
   drawLib(S.lx, S.zy);
   drawZone(S.bx, S.by, '📄', Math.abs(L.x - S.bx) < 44 && Math.abs(L.y - S.by) < 26);
   drawZone(S.lx, S.zy, '📕', Math.abs(L.x - S.lx) < 44 && Math.abs(L.y - S.zy) < 26);
@@ -1214,7 +1229,10 @@ function advRender() {
   g.restore();
   // seta para a banca certa quando está fora do ecrã
   const goal = A.carry.includes('b') ? S.lx : A.carry.includes('f') ? S.bx : (A.binder.out > 0 && A.carry.length < advCap() ? S.bx : null), gyy = goal === S.lx ? S.zy : S.by;
-  if (goal != null) { const gx = goal - A.cam; if (gx < 10 || gx > W - 10) { const sd = gx < 10 ? -1 : 1, ax = sd < 0 ? 18 : W - 18, ay = gyy - 30 + Math.sin(T * 6) * 3; P([ax + sd * 12, ay, ax - sd * 6, ay - 12, ax - sd * 6, ay + 12], '#ffc83d', 2.5); } }
+  if (goal != null) { const gx = goal - A.cam, gy2 = gyy - A.camY - 30;
+    if (gx < 10 || gx > W - 10 || gy2 < 95 || gy2 > H - 20) {
+      const ang = Math.atan2(gy2 - H / 2, gx - W / 2), ax = clamp(gx, 22, W - 22), ay = clamp(gy2, 105, H - 120) + Math.sin(T * 6) * 3;
+      g.save(); g.translate(ax, ay); g.rotate(ang); P([12, 0, -6, -12, -6, 12], '#ffc83d', 2.5); g.restore(); } }
   if (A.banner) { const b = A.banner, a = Math.min(1, b.t * 2); g.save(); g.globalAlpha = a; g.translate(W / 2, 160); g.rotate(-.04); g.font = '34px Bangers, Impact'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.lineWidth = 7; g.strokeStyle = OUT; g.strokeText(b.txt, 0, 0, W - 30); g.fillStyle = '#ffc83d'; g.fillText(b.txt, 0, 0, W - 30); g.restore(); }
   g.restore();
   advHUD(G, S);
@@ -1233,6 +1251,17 @@ function advHUD(G, S) {
   RR(92, 31, 90, 10, 5, '#4a3a5a', 1.4); RR(92, 31, 90 * A.xp / advNeed(A.lvl), 10, 5, '#7be07b', 1.4);
   g.font = '800 12px Nunito'; g.fillStyle = '#fff'; g.textAlign = 'left'; g.fillText('🎒 ' + A.carry.length + '/' + advCap() + '   📜 ' + A.earned, 190, 37);
   ADV_BTN().forEach(b => { RR(b.x, b.y, b.w, b.h, 9, '#fff', 2.5); g.fillStyle = OUT; g.font = (b.fs || 16) + 'px Bangers, Impact'; g.textAlign = 'center'; g.fillText(b.label(), b.x + b.w / 2, b.y + b.h / 2 + 1); });
+  // minimapa
+  { const mw = 120, k = mw / G.ww, mh = Math.round((G.y1 - G.top) * k), mx = W - mw - 10, my = 92;
+    g.save(); g.globalAlpha = .9; RR(mx - 3, my - 3, mw + 6, mh + 6, 7, 'rgba(38,20,47,.82)', 2);
+    const sy = (G.gy - G.top) * k; g.fillStyle = '#efe8d8'; g.globalAlpha = .35; g.fillRect(mx, my + sy, mw, mh - sy); g.globalAlpha = .9;
+    for (let i = 0; i < G.n; i++) { g.fillStyle = G.t && G.t[i].home ? '#ffc83d' : 'rgba(255,255,255,' + (i % 2 ? .45 : .3) + ')'; g.fillRect(mx + i * G.wd * k, my, G.wd * k - 1, sy); }
+    const P2 = (x, y) => [mx + x * k, my + (y - G.top) * k];
+    g.strokeStyle = '#fff'; g.lineWidth = 1.2; g.strokeRect(mx + A.cam * k, my + (A.camY - G.top) * k, W * k, H * k);
+    A.drops.forEach(d => { const [a, b] = P2(d.x, d.y); g.fillStyle = '#fff'; g.fillRect(a - 1, b - 1, 2, 2); });
+    A.en.forEach(e => { const [a, b] = P2(e.x, e.y); E(a, b, e.boss ? 3.5 : 1.6, e.boss ? 3.5 : 1.6, e.boss ? '#ff4fa3' : '#ff6a6a', 0); });
+    let [a, b] = P2(S.bx, S.by); E(a, b, 2.6, 2.6, '#2a5bd7', 1); [a, b] = P2(S.lx, S.zy); E(a, b, 2.6, 2.6, '#c4102a', 1);
+    [a, b] = P2(L.x, L.y); E(a, b, 3, 3, '#7be07b', 1.2); g.restore(); }
   // dica
   const tip = L.dead ? 'Desmaiaste… voltas na Biblioteca' : A.carry.includes('b') ? '📕 Leva os livros à Biblioteca' : A.carry.length >= advCap() ? '🎒 Mochila cheia! Vai ao Encadernador' : A.carry.includes('f') ? '📄 Leva as folhas ao Encadernador' : A.binder.out > 0 ? '📕 Há livros prontos no Encadernador' : '⚔️ Derrota inimigos para apanhar folhas';
   g.font = '800 13px Nunito'; const tw = g.measureText(tip).width + 22; RR(W / 2 - tw / 2, 58, tw, 26, 13, 'rgba(255,255,255,.92)', 2); g.fillStyle = OUT; g.textAlign = 'center'; g.fillText(tip, W / 2, 71.5);
