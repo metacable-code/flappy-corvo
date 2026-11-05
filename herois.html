@@ -99,7 +99,7 @@ function resize() {
   wrap.style.width = W * k + 'px'; wrap.style.height = H * k + 'px';
   DPR = Math.min(2.5, (window.devicePixelRatio || 1) * k);
   cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
-  cardTop = H - 150; groundY = cardTop - 58;
+  cardTop = H - 150; groundY = Math.round(50 + .915 * (cardTop - 50)); // linha do passeio nos fundos
   // os ecrãs HTML ficam à escala do canvas
   document.querySelectorAll('.scr').forEach(s => { s.style.width = W + 'px'; s.style.height = H + 'px'; s.style.transform = 'scale(' + k + ')'; s.style.transformOrigin = '0 0'; s.style.inset = 'auto'; s.style.left = '0'; s.style.top = '0'; });
 }
@@ -373,8 +373,18 @@ function landmark(kind, x, by, s) {
   }
   g.restore();
 }
+const BGI = {};
+['lello', 'joanina', 'mafra', 'gabinete', 'tombo', 'alex'].forEach(k => { const im = new Image(); im.onload = () => { im.ok = true; }; im.src = 'herois/fundo_' + k + '.webp?v=1'; BGI[k] = im; });
 function drawBG(t, scroll, stI) {
-  const S = ST[stI], gr = g.createLinearGradient(0, 0, 0, groundY);
+  const S = ST[stI], bi = BGI[S.land];
+  if (bi && bi.ok) {
+    const top = 50, hd = cardTop - top, wd = hd * bi.width / bi.height, max = Math.max(0, wd - W);
+    const off = R ? Math.min(max, scroll * max / 1900) : max * (.5 - .5 * Math.cos(t * .06));
+    g.drawImage(bi, 0, 0, bi.width, 3, 0, 0, W, top + 1);           // céu por cima do topo da imagem
+    g.drawImage(bi, -off, top, wd, hd);
+    return;
+  }
+  const gr = g.createLinearGradient(0, 0, 0, groundY);
   gr.addColorStop(0, S.sky[0]); gr.addColorStop(1, S.sky[1]); g.fillStyle = gr; g.fillRect(0, 0, W, groundY);
   // nuvens
   g.fillStyle = 'rgba(255,255,255,.75)';
