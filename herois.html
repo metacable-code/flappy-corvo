@@ -560,7 +560,7 @@ function tts(text, id, force) {
 }
 const pick = a => a[Math.floor(Math.random() * a.length)];
 // vozes gravadas (ElevenLabs): herois/vozes/<heroi>_<tipo>_<n>.mp3 — n = posição da fala em FALAS. Pôr o nome aqui quando o ficheiro existir.
-const VOZES_MP3 = ['quixote_sp_1', 'alice_sp_0', 'holmes_sp_0'];
+const VOZES_MP3 = ['quixote_sp_1', 'alice_sp_0', 'holmes_sp_0', 'dracula_sp_1'];
 const AUD = {};
 VOZES_MP3.forEach(k => { const a = new Audio(); a.preload = 'auto'; a.addEventListener('canplaythrough', () => { a.ok = true; }); a.addEventListener('error', () => { if (!a.alt) { a.alt = 1; a.src = 'her%C3%B3is/vozes/' + k + '.mp3?v=1'; } }); a.src = 'herois/vozes/' + k + '.mp3?v=1'; AUD[k] = a; });
 let audNow = null;
