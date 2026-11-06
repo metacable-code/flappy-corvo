@@ -561,9 +561,9 @@ const FALAS_E = {
   sombra: ['Ninguém se vai lembrar de ti…', 'Quem és tu? Já me esqueci.', 'O esquecimento é o meu forte!', 'Os teus livros? Que livros?'],
 };
 function falaInimigo(e) {
-  if (!e || e.dead || fx.some(f => f.k === 'say' && f.t < 1.6)) return;
+  if (!e || e.dead || fx.some(f => f.k === 'say' && f.t < 2.6)) return;
   const L2 = FALAS_E[e.type]; if (!L2) return;
-  fx.push({ k: 'say', h: e, s: pick(L2), t: 0, life: 2 });
+  fx.push({ k: 'say', h: e, s: pick(L2), t: 0, life: 3.6 });
 }
 let lastVoz = -99, lastTaunt = 0;
 const VOZ = { quixote: [.8, .95], holmes: [.7, 1.05], dracula: [.25, .85], alice: [1.6, 1.12], nemo: [.5, .95], adamastor: [.05, .78] };
@@ -596,7 +596,8 @@ function playVoz(k, fallback) {
 function fala(h, tipo, prob) {
   if (!h || (prob != null && Math.random() > prob)) return;
   const F = FALAS[h.id]; if (!F || !F[tipo]) return;
-  const busy = fx.some(f => f.k === 'say' && f.t < 1.2); if (busy && tipo === 'kill') return;
+  const busy = fx.some(f => f.k === 'say' && f.t < 2.6); if (busy && tipo !== 'sp' && tipo !== 'book' && tipo !== 'boss' && tipo !== 'lvl') return;
+  if (busy && tipo === 'sp' && Math.random() < .6) return;
   for (let i = fx.length - 1; i >= 0; i--) if (fx[i].k === 'say') fx.splice(i, 1);
   // se houver falas gravadas para este herói/tipo, usar essas
   // voz: na Batalha fala-se pouco (os especiais são muitos); na Aventura um pouco mais
@@ -605,7 +606,7 @@ function fala(h, tipo, prob) {
   const comVoz = vozOn && !muted && now - lastVoz > gap && Math.random() < chance;
   const rec = F[tipo].map((_, j) => j).filter(j => AUD[h.id + '_' + tipo + '_' + j] && !AUD[h.id + '_' + tipo + '_' + j].error);
   const i = comVoz && rec.length ? pick(rec) : Math.floor(Math.random() * F[tipo].length), s = F[tipo][i];
-  fx.push({ k: 'say', h, s, t: 0, life: 2.4 });
+  fx.push({ k: 'say', h, s, t: 0, life: 4 });
   if (!comVoz) return;
   lastVoz = now;
   const fb = () => tts(s, h.id, true);
@@ -622,7 +623,7 @@ function hurtEnemy(e, dmg, h, crit) {
   if (h && h.d.ls && !h.dead) h.hp = Math.min(h.max, h.hp + dmg * h.d.ls);
   if (h) h.charge = Math.min(100, h.charge + 3);
   if (e.hp <= 0) {
-    e.dead = true; R.earned += e.pg; R.kills++; SFX.kill(); pages(e.x, e.y - 20 * e.size, e.boss ? 40 : 7); if (h) fala(h, 'kill', e.boss ? 1 : .12);
+    e.dead = true; R.earned += e.pg; R.kills++; SFX.kill(); pages(e.x, e.y - 20 * e.size, e.boss ? 40 : 7); if (h) fala(h, 'kill', e.boss ? 1 : .06);
     e.die = { t: 0, life: e.boss ? 1.1 : .6, vx: (e.boss ? 60 : 140) + Math.random() * 90, vy: e.boss ? -200 : -300 - Math.random() * 120, r: 0, vr: (e.boss ? 3 : 9) * (Math.random() < .5 ? -1 : 1) }; R.dying.push(e);
     if (e.boss) hitstop = .3;
     if (Math.random() < .35 || e.boss) txt(e.x, e.y - eH(e) - 20, POW[Math.floor(Math.random() * POW.length)], '#ff4fa3', e.boss ? 40 : 24, 1);
@@ -754,7 +755,7 @@ function update(dt) {
     }
   }
   R.en = es.filter(e => !e.dead);
-  if (T - lastTaunt > 5 + Math.random() * 4 && R.en.length) { lastTaunt = T; if (Math.random() < .6) { const al = alive(); if (al.length) fala(pick(al), 'taunt'); } else falaInimigo(pick(R.en)); }
+  if (T - lastTaunt > 10 + Math.random() * 6 && R.en.length) { lastTaunt = T; if (Math.random() < .6) { const al = alive(); if (al.length) fala(pick(al), 'taunt'); } else falaInimigo(pick(R.en)); }
   for (let i = R.dying.length - 1; i >= 0; i--) { const e = R.dying[i], d = e.die; d.t += dt; e.x += d.vx * dt; e.y += d.vy * dt; d.vy += 900 * dt; d.r += d.vr * dt; if (d.t > d.life) R.dying.splice(i, 1); }
   // fim de onda / derrota
   if (!alive().length) { endRun(false); return; }
@@ -886,15 +887,15 @@ function drawFX() {
   // explosões estilo banda desenhada
   fx.forEach(f => {
     if (f.k === 'burst') { const k = f.t / f.life; g.save(); g.globalAlpha = 1 - k * .6; star(f.x, f.y, f.r * (.6 + k * .6), f.r * (.3 + k * .3), 9, f.col, f.rot); g.restore(); }
-    else if (f.k === 'say' && !f.h.dead) { const a = Math.min(1, (f.life - f.t) * 3, f.t * 8); g.save(); g.globalAlpha = a; g.font = '800 12px Nunito';
+    else if (f.k === 'say' && !f.h.dead) { const a = Math.min(1, (f.life - f.t) * 3, f.t * 8); g.save(); g.globalAlpha = a; g.font = '800 15px Nunito';
       const adv = AV && MODE !== 'run', words = f.s.split(' '), lines = []; let cur = '';
-      words.forEach(w => { const t = cur ? cur + ' ' + w : w; if (g.measureText(t).width > 190 && cur) { lines.push(cur); cur = w; } else cur = t; }); lines.push(cur);
-      const w = Math.max(...lines.map(l => g.measureText(l).width)) + 18, hh = 10 + lines.length * 15, cam = adv ? AV.cam : 0;
+      words.forEach(w => { const t = cur ? cur + ' ' + w : w; if (g.measureText(t).width > 230 && cur) { lines.push(cur); cur = w; } else cur = t; }); lines.push(cur);
+      const w = Math.max(...lines.map(l => g.measureText(l).width)) + 24, hh = 14 + lines.length * 19, cam = adv ? AV.cam : 0;
       const hx = f.h.x, top = adv ? f.h.y - (f.h.id === 'adamastor' ? 150 : 128) : groundY - 175;
       const x = Math.min(cam + W - w - 4, Math.max(cam + 4, hx - w / 2)), y = top - hh;
-      RR(x, y, w, hh, 10, '#fff', 2.4); P([hx - 5, y + hh, hx + 6, y + hh, hx, y + hh + 9], '#fff', 0);
+      RR(x, y, w, hh, 12, '#fff', 2.8); P([hx - 5, y + hh, hx + 6, y + hh, hx, y + hh + 9], '#fff', 0);
       g.beginPath(); g.moveTo(hx - 5, y + hh); g.lineTo(hx, y + hh + 9); g.lineTo(hx + 6, y + hh); g.strokeStyle = OUT; g.lineWidth = 2.4; g.stroke();
-      g.fillStyle = OUT; g.textAlign = 'left'; g.textBaseline = 'middle'; lines.forEach((l, i) => g.fillText(l, x + 9, y + 12 + i * 15)); g.restore(); }
+      g.fillStyle = OUT; g.textAlign = 'left'; g.textBaseline = 'middle'; lines.forEach((l, i) => g.fillText(l, x + 12, y + 16 + i * 19)); g.restore(); }
     else if (f.k === 'flash') { g.fillStyle = 'rgba(255,255,255,' + (.35 * (1 - f.t / f.life)) + ')'; g.fillRect(-5000, -5000, 10000 + W, 10000 + H); }
   });
   // textos
@@ -1085,7 +1086,7 @@ function advHurtE(e, dmg, u, crit) {
   txt(e.x + (Math.random() - .5) * 16, e.y - eH(e) - 6, (crit ? '💥' : '') + dmg, crit ? '#ffc83d' : '#fff', crit ? 20 : 15);
   if (u) { u.charge = Math.min(100, u.charge + 3); if (u.d.ls) u.hp = Math.min(u.max, u.hp + dmg * u.d.ls); }
   if (e.hp <= 0) {
-    e.dead = true; AV.kills++; AV.earned += e.pg; SFX.kill(); pages(e.x, e.y - 20 * e.size, e.boss ? 40 : 6); if (u) fala(u, 'kill', e.boss ? 1 : .1);
+    e.dead = true; AV.kills++; AV.earned += e.pg; SFX.kill(); pages(e.x, e.y - 20 * e.size, e.boss ? 40 : 6); if (u) fala(u, 'kill', e.boss ? 1 : .06);
     const n = e.boss ? 16 : { traca: 1, rato: 1, bolor: 2, censor: 3, queimador: 2, sombra: 2 }[e.type] || 1; advDrop(e.x, e.y, 'f', n);
     if (Math.random() < .35 || e.boss) txt(e.x, e.y - eH(e) - 20, POW[Math.floor(Math.random() * POW.length)], '#ff4fa3', e.boss ? 40 : 24, 1);
     e.die = { t: 0, life: e.boss ? 1.1 : .6, vx: -dir * -1 * ((e.boss ? 60 : 140) + Math.random() * 90), vy: e.boss ? -200 : -300 - Math.random() * 120, r: 0, vr: (e.boss ? 3 : 9) * (Math.random() < .5 ? -1 : 1) };
@@ -1297,7 +1298,7 @@ function advUpdate(dt) {
       A.party.forEach(u => { if (!u.dead && Math.hypot(u.x - e.x, u.y - e.y) < 160) { advHurtH(u, e.atk * .7, e); burst(u.x, u.y - 30, '#ff9a1f', 20); } }); } }
   }
   advTraffic(dt, G);
-  if (T - lastTaunt > 5 + Math.random() * 4 && A.en.length) { lastTaunt = T; const near = A.en.filter(e => !e.dead && Math.abs(e.x - A.party[0].x) < W * .6); if (near.length) { if (Math.random() < .6) { const al = A.party.filter(u => !u.dead); if (al.length) fala(pick(al), 'taunt'); } else falaInimigo(pick(near)); } }
+  if (T - lastTaunt > 10 + Math.random() * 6 && A.en.length) { lastTaunt = T; const near = A.en.filter(e => !e.dead && Math.abs(e.x - A.party[0].x) < W * .6); if (near.length) { if (Math.random() < .6) { const al = A.party.filter(u => !u.dead); if (al.length) fala(pick(al), 'taunt'); } else falaInimigo(pick(near)); } }
   A.en = A.en.filter(e => !e.dead && e.x > -200 && e.x < G.ww + 200);
   for (let i = A.dying.length - 1; i >= 0; i--) { const e = A.dying[i], d = e.die; d.t += dt; e.x += d.vx * dt; e.y += d.vy * dt; d.vy += 900 * dt; d.r += d.vr * dt; if (d.t > d.life) A.dying.splice(i, 1); }
   // projécteis
