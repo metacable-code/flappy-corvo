@@ -510,42 +510,62 @@ function say(h, s) { fx.push({ k: 'say', h, s, t: 0, life: 2 }); }
 /* ---------- falas (português de Portugal, ordinário) e vozes ---------- */
 const FALAS = {
   quixote: {
-    sp: ['Gigantes do caralho, levem com esta!', 'Ao ataque, Rocinante, foda-se!', 'Moinho ou traça, vão todos para o caralho!', 'Pela minha Dulcineia, filhos da puta!'],
-    kill: ['Mais um gigante de merda!', 'Toma, que é para aprenderes!', 'Isto é que é cavalaria, porra!'],
-    ko: ['Ai a minha lança… foda-se.', 'Sancho, ajuda-me, caralho!'],
-    lvl: ['Sou o cavaleiro mais foda da Mancha!'], book: ['Larguem-me deste livro, que eu tenho moinhos para matar!'], boss: ['Aquilo é um gigante, caralho! Eu bem dizia!']
+    sp: ['Gigantes do caralho, levem com esta!', 'Ao ataque, Rocinante, foda-se!', 'Moinho ou traça, vão todos para o caralho!', 'Pela minha Dulcineia, filhos da puta!', 'Por Dulcineia e pela tua mãe, toma!', 'Sancho, segura-me o elmo que eu vou partir isto tudo!', 'Cavalaria andante, porrada constante!', 'Achas que és moinho? Vais girar, cabrão!'],
+    kill: ['Mais um gigante de merda!', 'Toma, que é para aprenderes!', 'Isto é que é cavalaria, porra!', 'Menos um gigante, mais uma tasca!', 'Vai chorar para a Mancha!', 'Isso foi uma lançada à antiga, ó palerma!', 'Nem o Sancho cai tão depressa!', 'Levaste de um velho de 50 anos, que vergonha!'],
+    ko: ['Ai a minha lança… foda-se.', 'Sancho, ajuda-me, caralho!', 'Rocinante, leva-me a casa…', 'Isto foi um moinho traiçoeiro, juro!'],
+    lvl: ['Sou o cavaleiro mais foda da Mancha!'], book: ['Larguem-me deste livro, que eu tenho moinhos para matar!'], boss: ['Aquilo é um gigante, caralho! Eu bem dizia!'],
+    taunt: ["Ó traça, a tua mãe era um guarda-chuva!", "Vem cá, que eu desmonto-te em fanicos!", "Já vi moinhos com mais pinta que tu!", "Cheiras a biblioteca fechada desde 1605!", "Desce do cavalo… ai, espera, o cavalo sou eu."]
   },
   holmes: {
-    sp: ['Elementar, meu caro filho da puta!', 'Caso encerrado, foda-se!', 'Deduzi que vais levar no focinho!'],
-    kill: ['Culpado, caralho!', 'Elementar, porra.', 'Mais um mistério de merda resolvido.'],
-    ko: ['Isto não estava nos meus cálculos, foda-se…', 'Watson, seu inútil, onde estás?'],
-    lvl: ['A minha mente está afiada como o caralho!'], book: ['Finalmente! Estava farto daquele livro, porra.'], boss: ['O culpado é aquele monte de merda!']
+    sp: ['Elementar, meu caro filho da puta!', 'Caso encerrado, foda-se!', 'Deduzi que vais levar no focinho!', 'Deduzo que estás fodido!', 'Lupa no cu, já vi tudo!', 'Watson, apontei-te ao cérebro e falhei: não havia nada!', 'A pista leva ao teu focinho, otário!'],
+    kill: ['Culpado, caralho!', 'Elementar, porra.', 'Mais um mistério de merda resolvido.', 'Mistério resolvido: eras burro.', 'Aposto que nem sabias ler.', 'Caso arquivado, como tu.', 'Elementar: morreste.', 'Até a senhora Hudson te dava uma tareia.'],
+    ko: ['Isto não estava nos meus cálculos, foda-se…', 'Watson, seu inútil, onde estás?', 'Moriarty, foste tu, sacana?', 'Preciso de um cachimbo e de uma ambulância.'],
+    lvl: ['A minha mente está afiada como o caralho!'], book: ['Finalmente! Estava farto daquele livro, porra.'], boss: ['O culpado é aquele monte de merda!'],
+    taunt: ["Pelos teus sapatos, deduzo que és um falhado.", "Tens cara de quem perde ao Cluedo.", "Watson, olha para aquilo. Que nojo.", "Com essa inteligência, és o principal suspeito de ser estúpido.", "A tua árvore genealógica é um arbusto."]
   },
   dracula: {
-    sp: ['Filhos da noite, vão-se a eles, caralho!', 'Tenho uma sede do caralho!', 'Venham cá, que eu chupo-vos o sangue todo!'],
-    kill: ['Blhé! Sabes a papel, porra!', 'Que sangue de merda!', 'Próximo, caralho!'],
-    ko: ['Merda, apanhei sol…', 'Vou voltar, filhos da puta!'],
-    lvl: ['Mais forte que um vampiro do caralho!'], book: ['Saí do caixão… quer dizer, do livro! Foda-se, que luz!'], boss: ['Esse bicho tem sangue para um mês, porra!']
+    sp: ['Filhos da noite, vão-se a eles, caralho!', 'Tenho uma sede do caralho!', 'Venham cá, que eu chupo-vos o sangue todo!', 'Hora da janta, meus queridos!', 'Vou-te deixar mais branco que eu!', 'Morcegos, ao jantar!', 'O teu pescoço é meu, ó tenrinho!'],
+    kill: ['Blhé! Sabes a papel, porra!', 'Que sangue de merda!', 'Próximo, caralho!', 'Sangue tipo O-Inútil.', 'Precisava de mais sal.', 'Já comi melhor numa roulote.', 'Que sangue fraquinho, és vegetariano?', 'Isto é sangue ou água de bacalhau?'],
+    ko: ['Merda, apanhei sol…', 'Vou voltar, filhos da puta!', 'Alguém fechou o caixão comigo cá fora…', 'Estou a ficar com uma cor saudável, que horror!'],
+    lvl: ['Mais forte que um vampiro do caralho!'], book: ['Saí do caixão… quer dizer, do livro! Foda-se, que luz!'], boss: ['Esse bicho tem sangue para um mês, porra!'],
+    taunt: ["Anda cá, petisco!", "Tens cara de quem tem sangue de pacote.", "Já mordi melhores que tu ao pequeno-almoço.", "Nem com alho te safas, ó lesma!", "Vou-te chupar até ao tutano, e não é elogio."]
   },
   alice: {
-    sp: ['Bebe-me, cabrão!', 'Cortem-lhes a cabeça, caralho!', 'Encolhe, seu monte de merda!'],
-    kill: ['Cada vez mais curioso, porra!', 'Toma lá, ó chato!', 'Vai para o País das Merdas!'],
-    ko: ['Foda-se, caí no buraco outra vez…', 'Isto é tudo um sonho de merda!'],
-    lvl: ['Cresci, caralho!'], book: ['Saí pela toca do coelho, porra! Onde é que estou?'], boss: ['Aquilo é maior que a Rainha de Copas, foda-se!']
+    sp: ['Bebe-me, cabrão!', 'Cortem-lhes a cabeça, caralho!', 'Encolhe, seu monte de merda!', 'Chá às cinco e porrada às seis!', 'Comam bolo e morram!', 'O Gato de Cheshire está-se a rir de ti, otário!', 'Encolhe-te, meu badameco!'],
+    kill: ['Cada vez mais curioso, porra!', 'Toma lá, ó chato!', 'Vai para o País das Merdas!', 'Vai fazer queixinhas ao Coelho Branco!', 'Que festa de anos tão curta!', 'Mais louco que o Chapeleiro e mais morto!', 'Desmaiaste? Coitadinho.', 'Isso foi uma tareia de gente pequena!'],
+    ko: ['Foda-se, caí no buraco outra vez…', 'Isto é tudo um sonho de merda!', 'Ai, o buraco era mais fundo do que eu pensava…', 'Acordem-me quando isto acabar.'],
+    lvl: ['Cresci, caralho!'], book: ['Saí pela toca do coelho, porra! Onde é que estou?'], boss: ['Aquilo é maior que a Rainha de Copas, foda-se!'],
+    taunt: ["És tão feio que o espelho pediu para sair!", "Até a lagarta azul tem mais pinta que tu!", "Ó traça, vai roer outro livro!", "Tens menos juízo que um chá frio!", "Cortem-lhe a cabeça! Ah, já não tem, é só oca."]
   },
   nemo: {
-    sp: ['Torpedo neles, raios os partam!', 'Vinte mil léguas de porrada, caralho!', 'Afundem-se, filhos da puta!'],
-    kill: ['Ao fundo, cabrão!', 'Isso é para os peixes, porra!', 'Mais um para o fundo do mar!'],
-    ko: ['O Nautilus está a meter água, foda-se…', 'Raios me partam!'],
-    lvl: ['Capitão Nemo, mais forte que o caralho!'], book: ['Emergi! E que cheiro a terra de merda!'], boss: ['Aquilo é maior que uma baleia, caralho!']
+    sp: ['Torpedo neles, raios os partam!', 'Vinte mil léguas de porrada, caralho!', 'Afundem-se, filhos da puta!', 'Lança tudo, que o mar paga!', 'Fogo nas âncoras, filhos da mãe!', 'Vou-te pôr a nadar com os peixes, ó pescada!', 'Nautilus em modo destruição, porra!'],
+    kill: ['Ao fundo, cabrão!', 'Isso é para os peixes, porra!', 'Mais um para o fundo do mar!', 'Peixe miúdo, volta para o mar!', 'Afundado e sem colete!', 'Isso foi o polvo que te deu, não fui eu.', 'Mais um náufrago de merda.', 'Vai fazer companhia às sardinhas!'],
+    ko: ['O Nautilus está a meter água, foda-se…', 'Raios me partam!', 'Abandonar o navio, merda!', 'Tragam-me oxigénio e um bagaço.'],
+    lvl: ['Capitão Nemo, mais forte que o caralho!'], book: ['Emergi! E que cheiro a terra de merda!'], boss: ['Aquilo é maior que uma baleia, caralho!'],
+    taunt: ["Tens o cérebro de um carapau!", "És mais lento que uma traineira avariada!", "Nem a lula gigante te queria!", "Cheiras a marisco de terça-feira!", "Vou-te usar como isco, ó minhoca!"]
   },
   adamastor: {
-    sp: ['Treme, que eu sou o Adamastor, caralho!', 'Tormenta neles, foda-se!', 'Ninguém passa o meu Cabo, filhos da puta!'],
-    kill: ['Esmagado, porra!', 'Fraquinho como o caralho!', 'Mais um tuga perdido no mar!'],
-    ko: ['Até o Camões ia gozar com isto, foda-se…', 'Volto já, caralho!'],
-    lvl: ['Mais gigante que nunca, porra!'], book: ['Quem me acordou, caralho?! Ah, fui eu.'], boss: ['Pensas que és grande? Olha para mim, cabrão!']
+    sp: ['Treme, que eu sou o Adamastor, caralho!', 'Tormenta neles, foda-se!', 'Ninguém passa o meu Cabo, filhos da puta!', 'Tempestade em cima de ti, ó minúsculo!', 'Vou-te mandar para o Cabo das Tormentas!', 'O mar está bravo e eu também!', 'Camões, escreve isto: levaram todos!'],
+    kill: ['Esmagado, porra!', 'Fraquinho como o caralho!', 'Mais um tuga perdido no mar!', 'Até as ondas te gozam!', 'Vai chorar para o Vasco da Gama!', 'Pequenino e mal-educado, como os outros!', 'Esmagado como uma sardinha no São João!', 'Nem para isco serves!'],
+    ko: ['Até o Camões ia gozar com isto, foda-se…', 'Volto já, caralho!', 'Fui rochedo e agora sou pedregulho…', 'Isto não vai para Os Lusíadas, pois não?'],
+    lvl: ['Mais gigante que nunca, porra!'], book: ['Quem me acordou, caralho?! Ah, fui eu.'], boss: ['Pensas que és grande? Olha para mim, cabrão!'],
+    taunt: ["És tão pequeno que nem te vejo daqui de cima!", "Vem cá, formiga com pernas!", "Já afundei naus maiores que a tua tromba!", "Treme, que ainda nem comecei!", "Com essa cara, até o nevoeiro foge!"]
   },
 };
+const FALAS_E = {
+  traca: ['Vou-te roer as páginas todas!', 'Hmm, papel com sabor a medo!', 'Lâmpada? Onde? ONDE?!', 'Sou pequena mas faço buracos grandes!'],
+  rato: ['Squeak! Vou roer-te as meias!', 'Este arquivo é meu, ó intruso!', 'Já comi enciclopédias maiores que tu!', 'Queijo? Não. Quero livros!'],
+  bolor: ['Vou-te deixar verde de inveja!', 'Cheiro mal e tenho orgulho nisso!', 'Humidade é vida, meu!', 'Abraço? Aaaabraço!'],
+  censor: ['Isso que disseste está CENSURADO!', 'Carimbo na tua boca, já!', 'Nada de livros sem autorização!', 'Lápis azul em ti, ó subversivo!'],
+  queimador: ['Fogueirinha de livros, que fofo!', 'Trouxe fósforos, e tu?', 'Isto vai arder que nem um São João!', 'Ler faz mal, arder faz bem!'],
+  sombra: ['Ninguém se vai lembrar de ti…', 'Quem és tu? Já me esqueci.', 'O esquecimento é o meu forte!', 'Os teus livros? Que livros?'],
+};
+function falaInimigo(e) {
+  if (!e || e.dead || fx.some(f => f.k === 'say' && f.t < 1.6)) return;
+  const L2 = FALAS_E[e.type]; if (!L2) return;
+  fx.push({ k: 'say', h: e, s: pick(L2), t: 0, life: 2 });
+}
+let lastVoz = -99, lastTaunt = 0;
 const VOZ = { quixote: [.8, .95], holmes: [.7, 1.05], dracula: [.25, .85], alice: [1.6, 1.12], nemo: [.5, .95], adamastor: [.05, .78] };
 const hasTTS = 'speechSynthesis' in window && typeof SpeechSynthesisUtterance !== 'undefined';
 let ptVoice = null, voicesListed = false, ttsUnlocked = false, lastTalk = -9, vozOn = lsGet('herois_voz') !== '0';
@@ -579,10 +599,17 @@ function fala(h, tipo, prob) {
   const busy = fx.some(f => f.k === 'say' && f.t < 1.2); if (busy && tipo === 'kill') return;
   for (let i = fx.length - 1; i >= 0; i--) if (fx[i].k === 'say') fx.splice(i, 1);
   // se houver falas gravadas para este herói/tipo, usar essas
+  // voz: na Batalha fala-se pouco (os especiais são muitos); na Aventura um pouco mais
+  const now = performance.now() / 1000, bat = MODE === 'run', gap = bat ? 9 : 4.5;
+  const chance = tipo === 'book' || tipo === 'boss' ? 1 : tipo === 'sp' ? (bat ? .3 : .6) : tipo === 'taunt' ? 0 : (bat ? .15 : .35);
+  const comVoz = vozOn && !muted && now - lastVoz > gap && Math.random() < chance;
   const rec = F[tipo].map((_, j) => j).filter(j => AUD[h.id + '_' + tipo + '_' + j] && !AUD[h.id + '_' + tipo + '_' + j].error);
-  const i = rec.length && vozOn && !muted ? pick(rec) : Math.floor(Math.random() * F[tipo].length), s = F[tipo][i]; fx.push({ k: 'say', h, s, t: 0, life: 2.2 });
+  const i = comVoz && rec.length ? pick(rec) : Math.floor(Math.random() * F[tipo].length), s = F[tipo][i];
+  fx.push({ k: 'say', h, s, t: 0, life: 2.4 });
+  if (!comVoz) return;
+  lastVoz = now;
   const fb = () => tts(s, h.id, true);
-  if (!playVoz(h.id + '_' + tipo + '_' + i, fb)) tts(s, h.id, tipo === 'sp' || tipo === 'book');
+  if (!playVoz(h.id + '_' + tipo + '_' + i, fb)) tts(s, h.id, true);
 }
 
 
@@ -727,6 +754,7 @@ function update(dt) {
     }
   }
   R.en = es.filter(e => !e.dead);
+  if (T - lastTaunt > 5 + Math.random() * 4 && R.en.length) { lastTaunt = T; if (Math.random() < .6) { const al = alive(); if (al.length) fala(pick(al), 'taunt'); } else falaInimigo(pick(R.en)); }
   for (let i = R.dying.length - 1; i >= 0; i--) { const e = R.dying[i], d = e.die; d.t += dt; e.x += d.vx * dt; e.y += d.vy * dt; d.vy += 900 * dt; d.r += d.vr * dt; if (d.t > d.life) R.dying.splice(i, 1); }
   // fim de onda / derrota
   if (!alive().length) { endRun(false); return; }
@@ -1269,6 +1297,7 @@ function advUpdate(dt) {
       A.party.forEach(u => { if (!u.dead && Math.hypot(u.x - e.x, u.y - e.y) < 160) { advHurtH(u, e.atk * .7, e); burst(u.x, u.y - 30, '#ff9a1f', 20); } }); } }
   }
   advTraffic(dt, G);
+  if (T - lastTaunt > 5 + Math.random() * 4 && A.en.length) { lastTaunt = T; const near = A.en.filter(e => !e.dead && Math.abs(e.x - A.party[0].x) < W * .6); if (near.length) { if (Math.random() < .6) { const al = A.party.filter(u => !u.dead); if (al.length) fala(pick(al), 'taunt'); } else falaInimigo(pick(near)); } }
   A.en = A.en.filter(e => !e.dead && e.x > -200 && e.x < G.ww + 200);
   for (let i = A.dying.length - 1; i >= 0; i--) { const e = A.dying[i], d = e.die; d.t += dt; e.x += d.vx * dt; e.y += d.vy * dt; d.vy += 900 * dt; d.r += d.vr * dt; if (d.t > d.life) A.dying.splice(i, 1); }
   // projécteis
