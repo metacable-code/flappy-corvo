@@ -297,6 +297,14 @@ CRY.pegasus = [
   { at: .42, d: .55, ty: 'sawtooth', f0: 1250, f1: 420, lf: 20, ld: 55, b0: 2200, b1: 800, q: 2, v: .35 },
   { at: .9, d: .25, ty: 'sine', f0: 700, f1: 500, v: .25 }];
 CRY.god = CRY.paraiso;
+/* ANJO_DIABO_OK */
+CRY.anjo = [
+  ...[0, .14, .28].map((at, i) => ({ at, d: .6, ty: 'sine', f0: 880 + i * 220, f1: 990 + i * 220, lf: 6, ld: 14, v: .35 })),
+  { at: .5, d: .6, ty: 'triangle', f0: 1320, f1: 1760, lf: 5, ld: 12, v: .25 }];
+CRY.diabo = [
+  { at: 0, d: .55, ty: 'sawtooth', f0: 150, f1: 70, lf: 40, ld: 30, b0: 400, b1: 200, q: 3, v: .5 },
+  { at: .3, d: .5, ty: 'square', f0: 90, f1: 55, lf: 28, ld: 18, v: .3 },
+  { at: .7, d: .4, ty: 'sawtooth', f0: 300, f1: 90, lf: 55, ld: 40, b0: 900, b1: 300, q: 2, v: .3 }];
 function cry(id) {
   if (muted) return;
   try {
@@ -848,6 +856,28 @@ const CHARS = {
     rd: ['Toca no ecrã, o Olimpo espera!', '*Toca no ecrã, caralho, vamos galopar nas estrelas!'],
     in: ['Sou o Pegasus. O melhor de todos. Sem exceção.', 'Salve! Sou o Pegasus, o cavalo alado. Ajoelha-te. Ou voa.']
   },
+  anjo: {
+    name: 'Anjo', emoji: '😇', bio: 'Anjo voador de luxo. Custa uma fortuna e abençoa tudo à volta.',
+    col: '#fff8e6', pc: '#ffe27a', gl: [255, 244, 190, .45], pitch: 1.25, rate: .95, ps: .9, hs: .9, ts: .9, tox: 4, toy: 0,
+    d: ['Santo Deus, caí em cima de livros...', 'Isto não estava nas escrituras!', 'Até os anjos tropeçam, pelos vistos.', 'Que pecado, bater assim!', 'Preciso de nuvens mais macias.', '*Foda-se, bati! Perdoai-me, caralho!', '*Caralho, um anjo a bater em livros, porra!', '*Puta que pariu, a minha auréola, caralho!'],
+    t: ['Reza por ti, {p}, que voar não é contigo.', 'Sou um anjo, {p}. Tu és só um pecador com asas.', 'Que o céu te ajude, {p}!', 'Tantas bênçãos e tu a perder, {p}!', 'Lá em cima já falam de ti, {p}.', '*Voas pior que um diabo de asa partida, {p}, caralho!', '*Foda-se, {p}, nem Deus te safa, porra!', '*Cala-te e ajoelha, {p}, caralho!'],
+    r: ['Sai da frente, {h}, estou em missão divina!', 'Não estorves um anjo, {h}!', '*{h}, vai-te foder, eu sou celestial!', '*Foda-se, {h}, eu toco harpa, tu tocas nos livros!'],
+    p: ['{n}! Aleluia!', '{n}! O céu aprova!', '*{n}, caralho! Milagre a sério!', '*{n}! Toma, livros do caralho!'],
+    rec: ['Recorde novo! Aleluia!', '*Recorde novo, caralho! Milagre!'],
+    rd: ['Toca no ecrã, o céu espera!', '*Toca no ecrã, caralho, vamos subir aos céus!'],
+    in: ['Sou o Anjo. Venho em paz. Mais ou menos.', 'Paz a todos! Sou o Anjo. Compra-me, que é para o teu bem.']
+  },
+  diabo: {
+    name: 'Diabo', emoji: '😈', bio: 'Diabo voador de luxo. Custa uma fortuna e cobra juros em moedas.',
+    col: '#ffd9d0', pc: '#ff6a3a', gl: [255, 90, 40, .45], pitch: 0.5, rate: .95, ps: .9, hs: .9, ts: .9, tox: 4, toy: 0,
+    d: ['Que inferno, bati nos livros!', 'Isto vai ficar na minha conta...', 'Até o diabo tropeça, pelos vistos.', 'Que ultraje para um príncipe das trevas!', 'Preciso de fogo mais forte.', '*Foda-se, bati! Vai tudo para o caralho!', '*Caralho, o diabo a bater em livros, porra!', '*Puta que pariu, o meu tridente, caralho!'],
+    t: ['Vendeste a alma por isto, {p}?', 'Sou o diabo, {p}. Perder é a minha especialidade… tua.', 'Bem-vindo ao inferno, {p}!', 'Tantos pactos e tu a perder, {p}!', 'Lá em baixo já tens lugar, {p}.', '*Voas pior que um anjo bêbado, {p}, caralho!', '*Foda-se, {p}, nem o inferno te quer, porra!', '*Cala-te e arde, {p}, caralho!'],
+    r: ['Sai da frente, {h}, vais arder!', 'Não estorves o diabo, {h}!', '*{h}, vai-te foder, eu sou o inferno!', '*Foda-se, {h}, eu piso brasas, tu pisas livros!'],
+    p: ['{n}! Que delícia diabólica!', '{n}! O inferno aprova!', '*{n}, caralho! Pacto bem pago!', '*{n}! Toma, livros do caralho!'],
+    rec: ['Recorde novo! Mwahaha!', '*Recorde novo, caralho! Ardam todos!'],
+    rd: ['Toca no ecrã, o inferno espera!', '*Toca no ecrã, caralho, vamos queimar isto tudo!'],
+    in: ['Sou o Diabo. Assina aqui. Pequena letra.', 'Olá! Sou o Diabo. Compra-me, a tua alma fica por minha conta.']
+  },
   ana: {
     name: 'Ana', emoji: '🌺', bio: 'Beija-flor minúscula, rapidíssima e muito mal-educada.',
     col: '#ff5fa8', pc: '#2dbb8a', gl: [255, 95, 168, .26], pitch: 1.8, rate: 1.3, ps: 1, hs: 1, ts: 1.15, tox: -5, toy: 1,
@@ -1138,6 +1168,92 @@ DRAW.pegasus = function (c, w, m, tt) {
   featherWing(c, wy, 1, '#ffffff', '#8f9bc4');
   c.fillStyle = 'rgba(255,215,106,.9)'; dot(c, -3, -3 + wy * .3, 1, '#ffd76a'); dot(c, 6, -5 + wy * .2, .9, '#ffd76a');
 };
+function angelWing(c, wy, k, al) {
+  c.save(); c.globalAlpha *= al; c.translate(-3, -3); c.rotate(-wy * .03);
+  const rows = [['#ffffff', 36, 3.6, 7], ['#f2f7ff', 27, 3.2, 6], ['#e1ebff', 18, 2.8, 5]];
+  c.lineWidth = .8; c.strokeStyle = '#98add8';
+  rows.forEach(([col, L0, ry, n], r) => {
+    c.fillStyle = col;
+    for (let i = 0; i < n; i++) {
+      const a = Math.PI + .1 + i * (1.25 / (n - 1)) + wy * .004 * i, L = (L0 - i * (r === 0 ? 1.4 : .8)) * k;
+      ell(c, Math.cos(a) * L / 2, Math.sin(a) * L / 2, L / 2, ry, a); fs(c);
+    }
+  });
+  c.restore();
+}
+function spark4(c, x, y, s, col) {
+  c.fillStyle = col; poly(c, [x, y - s * 2.2, x + s * .55, y - s * .55, x + s * 2.2, y, x + s * .55, y + s * .55, x, y + s * 2.2, x - s * .55, y + s * .55, x - s * 2.2, y, x - s * .55, y - s * .55]); c.fill();
+}
+DRAW.anjo = function (c, w, m, tt) {
+  const wy = w * 12, bob = Math.sin(tt * .12) * 1.2, pul = .5 + .5 * Math.sin(tt * .2);
+  for (let i = 0; i < 6; i++) {
+    const a = tt * .045 + i * 1.047, r = 27 + (i % 2) * 7;
+    spark4(c, Math.cos(a) * r * 1.15, Math.sin(a) * r * .75 - 4, 1.1 + .9 * Math.abs(Math.sin(tt * .22 + i)), 'rgba(255,244,170,' + (.5 + .45 * Math.sin(tt * .25 + i)) + ')');
+  }
+  angelWing(c, wy, 1.1, .8);
+  c.fillStyle = '#ffffff'; c.strokeStyle = '#98add8'; c.lineWidth = .9;
+  [[-13, 2, -25, 2 + wy * .1], [-12, 5, -23, 10 + wy * .1], [-11, 0, -22, -5 + wy * .1]].forEach(f => { ell(c, (f[0] + f[2]) / 2, (f[1] + f[3]) / 2, 6.5, 2.6, Math.atan2(f[3] - f[1], f[2] - f[0])); fs(c); });
+  const gb = c.createLinearGradient(0, -9, 0, 10); gb.addColorStop(0, '#ffffff'); gb.addColorStop(1, '#dfe9ff');
+  c.fillStyle = gb; c.strokeStyle = '#98add8'; c.lineWidth = 1.4; ell(c, 0, 0, 15, 9); fs(c);
+  c.fillStyle = '#f4f8ff'; c.strokeStyle = '#b4c4e6'; c.lineWidth = .9;
+  c.beginPath(); c.moveTo(-8, 3); c.quadraticCurveTo(-18, 11, -13, 15); c.quadraticCurveTo(-8, 12, -4, 15); c.quadraticCurveTo(0, 12, 4, 15); c.quadraticCurveTo(9, 12, 13, 15); c.quadraticCurveTo(14, 8, 9, 3); c.closePath(); fs(c);
+  c.fillStyle = '#ffd84a'; c.strokeStyle = '#b8860b'; c.lineWidth = .8; ell(c, 0, 4, 9.5, 1.6, .05); fs(c);
+  dot(c, 0, 4, 1.5, '#fff3a0');
+  c.fillStyle = '#fff1d6'; c.strokeStyle = '#c9a56a'; c.lineWidth = 1.2; c.beginPath(); c.arc(13, -6, 7.4, 0, TAU); fs(c);
+  c.fillStyle = '#ffd86a'; c.strokeStyle = '#c9961c'; c.lineWidth = .8;
+  [[7, -11, 3.6], [10.5, -13.2, 3.4], [14.5, -13.4, 3.2], [18, -11.2, 3]].forEach(h => { c.beginPath(); c.arc(h[0], h[1], h[2], 0, TAU); fs(c); });
+  c.fillStyle = '#ffd04a'; c.strokeStyle = '#b8860b'; c.lineWidth = .9; poly(c, [19.5, -7, 28, -5, 19.5, -2.8]); fs(c);
+  c.fillStyle = 'rgba(255,150,150,.55)'; ell(c, 16.5, -3.6, 2.2, 1.4, 0); c.fill();
+  dot(c, 15.6, -8.2, 2.3, '#fff'); dot(c, 16.1, -8.2, 1.35, '#3a5a9a'); dot(c, 16.4, -8.6, .5, '#fff');
+  const hr = c.createRadialGradient(12, -18 + bob, 1, 12, -18 + bob, 15); hr.addColorStop(0, 'rgba(255,240,150,' + (.35 + pul * .3) + ')'); hr.addColorStop(1, 'rgba(255,240,150,0)');
+  c.fillStyle = hr; c.beginPath(); c.arc(12, -18 + bob, 15, 0, TAU); c.fill();
+  c.strokeStyle = '#ffcf33'; c.lineWidth = 2.6; ell(c, 12, -18 + bob, 9, 3, 0); c.stroke();
+  c.strokeStyle = '#fff8c8'; c.lineWidth = 1; ell(c, 12, -18.3 + bob, 9, 3, 0); c.stroke();
+  angelWing(c, wy * .85, .95, .92);
+};
+function devilWing(c, wy, k, col1, col2) {
+  const tips = [[-12, -34], [-27, -27], [-39, -12], [-34, 6]].map(p => [p[0] * k, p[1] * k + wy * .9 * k]);
+  c.save(); c.translate(-3, -3);
+  const g = c.createLinearGradient(-30, -30, -5, 5); g.addColorStop(0, col1); g.addColorStop(1, col2);
+  c.fillStyle = g; c.strokeStyle = '#2a0505'; c.lineWidth = 1.2;
+  c.beginPath(); c.moveTo(0, 0); c.lineTo(tips[0][0], tips[0][1]);
+  for (let i = 0; i < 3; i++) { const a = tips[i], b = tips[i + 1]; c.quadraticCurveTo((a[0] + b[0]) / 2 + 3, (a[1] + b[1]) / 2 + 7, b[0], b[1]); }
+  c.quadraticCurveTo(-18 * k, 12, -2, 9); c.closePath(); c.fill(); c.stroke();
+  c.strokeStyle = '#3a0808'; c.lineWidth = 1.5;
+  tips.forEach(t => { c.beginPath(); c.moveTo(0, 0); c.lineTo(t[0], t[1]); c.stroke(); });
+  tips.forEach(t => dot(c, t[0], t[1], 1.5, '#1a0303'));
+  c.restore();
+}
+DRAW.diabo = function (c, w, m, tt) {
+  const wy = w * 12, sw = Math.sin(tt * .13) * 3, fl = Math.sin(tt * .4);
+  flame(c, -15, 3, 26, 5.5, 'rgba(255,90,20,.8)', 0, tt, -1);
+  flame(c, -15, 3, 16, 3, 'rgba(255,210,60,.9)', 1.5, tt, -1);
+  for (let i = 0; i < 5; i++) { const a = tt * .07 + i * 1.3; dot(c, -22 - ((tt * .6 + i * 9) % 22), 2 + Math.sin(a * 2) * 6, 1.1, 'rgba(255,' + (140 + i * 20) + ',40,.8)'); }
+  c.strokeStyle = '#3a0707'; c.lineWidth = 2.4; c.lineCap = 'round';
+  c.beginPath(); c.moveTo(-13, 4); c.bezierCurveTo(-22, 14 + sw, -34, 2 - sw, -42, 12 + sw); c.stroke();
+  c.fillStyle = '#e02222'; c.strokeStyle = '#3a0707'; c.lineWidth = 1; poly(c, [-42, 12 + sw, -50, 6 + sw, -47, 12 + sw, -50, 19 + sw]); fs(c);
+  devilWing(c, wy, 1.05, '#5a0a0a', '#c01c1c');
+  const gb = c.createLinearGradient(0, -9, 0, 10); gb.addColorStop(0, '#ef3a2a'); gb.addColorStop(1, '#8e1212');
+  c.fillStyle = gb; c.strokeStyle = '#3a0707'; c.lineWidth = 1.5; ell(c, 0, 0, 15.5, 9); fs(c);
+  c.fillStyle = 'rgba(255,170,80,.4)'; ell(c, 2, 4, 9, 3.6, .1); c.fill();
+  c.strokeStyle = '#3a0707'; c.lineWidth = 1.2; c.beginPath(); c.moveTo(-5, 7); c.lineTo(-8, 13); c.moveTo(5, 8); c.lineTo(8, 14); c.stroke();
+  c.fillStyle = '#ff4a2e'; c.strokeStyle = '#3a0707'; c.lineWidth = 1.4; c.beginPath(); c.arc(13, -6, 7.6, 0, TAU); fs(c);
+  const hg = c.createLinearGradient(0, -26, 0, -10); hg.addColorStop(0, '#1a0505'); hg.addColorStop(1, '#7a1a10');
+  c.fillStyle = hg; c.strokeStyle = '#0d0202'; c.lineWidth = 1;
+  c.beginPath(); c.moveTo(7, -11); c.bezierCurveTo(3, -17, 4, -24, 9, -29); c.bezierCurveTo(9, -22, 12, -17, 13, -12.5); c.closePath(); fs(c);
+  c.beginPath(); c.moveTo(14.5, -12.5); c.bezierCurveTo(16, -19, 20, -25, 26, -27); c.bezierCurveTo(23, -21, 22, -16, 20, -10.5); c.closePath(); fs(c);
+  c.fillStyle = '#ff4a2e'; c.strokeStyle = '#3a0707'; c.lineWidth = .9; poly(c, [6, -6, 1, -12, 8, -10]); fs(c);
+  c.fillStyle = '#1a1a1a'; c.strokeStyle = '#000'; c.lineWidth = .8; poly(c, [19.5, -8, 29, -5.5, 19.5, -3.2]); fs(c);
+  c.fillStyle = '#fff'; poly(c, [21, -3.4, 22.4, -.2, 23.8, -3.9]); c.fill(); poly(c, [25, -4.2, 26, -1.4, 27.2, -4.6]); c.fill();
+  c.fillStyle = '#1a0505'; poly(c, [13, 0.5, 15.5, 6, 11, 2.6]); c.fill();
+  const ey = c.createRadialGradient(15.6, -8.4, .3, 15.6, -8.4, 3.4); ey.addColorStop(0, '#fff7a0'); ey.addColorStop(1, '#ffb400');
+  c.fillStyle = ey; c.beginPath(); c.arc(15.6, -8.4, 2.9, 0, TAU); c.fill();
+  c.fillStyle = '#000'; ell(c, 16.2, -8.4, .7, 2.2, 0); c.fill();
+  c.strokeStyle = '#1a0505'; c.lineWidth = 1.9; c.beginPath(); c.moveTo(11.2, -13); c.lineTo(19.2, -9.6); c.stroke();
+  c.strokeStyle = '#2a0a0a'; c.lineWidth = 1.2; c.beginPath(); c.moveTo(-6, 9); c.lineTo(20, -22); c.stroke();
+  c.strokeStyle = '#d8d8e0'; c.lineWidth = 1.2; c.beginPath(); c.moveTo(17, -23); c.quadraticCurveTo(20, -29, 23, -22); c.moveTo(20, -26.5); c.lineTo(20, -20); c.stroke();
+  devilWing(c, wy * .85, .6, '#7a1010', '#e02a2a');
+};
 DRAW.ana = function (c, w, m, tt) {
   c.fillStyle = '#2f8f6e'; c.strokeStyle = '#124a38'; c.lineWidth = 1; poly(c, [-9, 1, -20, -2, -22, 3, -19, 8, -9, 5]); fs(c);
   c.fillStyle = 'rgba(200,230,255,.5)'; c.strokeStyle = 'rgba(120,160,200,.8)'; c.lineWidth = .8;
@@ -1186,7 +1302,7 @@ DRAW.god = function (c, w, m, tt) {
   c.save(); c.strokeStyle = 'rgba(255,240,150,.9)'; c.lineWidth = 2; c.beginPath(); ell(c, 0, -26, 12, 4, 0); c.stroke(); c.restore();
   DRAW.paraiso(c, w, m, tt);
 };
-const ORDER = ['corvo', 'ju', 'aguia', 'liberdade', 'dragao', 'fenix', 'pomba', 'morcego', 'conde', 'pato', 'mocho', 'abutre', 'tucano', 'picapau', 'dodo', 'arara', 'gaivota', 'pelicano', 'pavao', 'ptero', 'ana', 'jorge', 'rafa', 'paraiso', 'pegasus'];
+const ORDER = ['corvo', 'ju', 'aguia', 'liberdade', 'dragao', 'fenix', 'pomba', 'morcego', 'conde', 'pato', 'mocho', 'abutre', 'tucano', 'picapau', 'dodo', 'arara', 'gaivota', 'pelicano', 'pavao', 'ptero', 'ana', 'jorge', 'rafa', 'paraiso', 'pegasus', 'anjo', 'diabo'];
 for (const id of ORDER.concat(['god'])) { CHARS[id].id = id; CHARS[id].draw = DRAW[id]; }
 
 function drawChar(c, id, x, y, o) {
@@ -1217,7 +1333,7 @@ let hSel = lsGetS('corvo_h');                       // 'rand' (sorteia em cada v
 if (hSel !== 'rand' && (!CHARS[hSel] || hSel === sel.p || hSel === 'god')) hSel = 'rand';
 
 /* ====== PREÇOS (quanto mais valioso o pássaro, mais caro) ====== */
-const PRICE = { corvo: 0, pomba: 30, pato: 55, mocho: 80, picapau: 110, tucano: 140, morcego: 170, abutre: 220, ju: 280, conde: 350, arara: 450, aguia: 600, dragao: 600, fenix: 900, liberdade: 1200, dodo: 2000, gaivota: 250, pelicano: 800, pavao: 3000, ptero: 5000, rafa: 40, jorge: 380, ana: 1500, paraiso: 10000, pegasus: 20000 };
+const PRICE = { corvo: 0, pomba: 30, pato: 55, mocho: 80, picapau: 110, tucano: 140, morcego: 170, abutre: 220, ju: 280, conde: 350, arara: 450, aguia: 600, dragao: 600, fenix: 900, liberdade: 1200, dodo: 2000, gaivota: 250, pelicano: 800, pavao: 3000, ptero: 5000, rafa: 40, jorge: 380, ana: 1500, paraiso: 10000, pegasus: 20000, anjo: 100000, diabo: 100000 };
 const hadWallet = walLoad(() => { if (typeof refreshWallet === 'function') refreshWallet(); });
 if (!hadWallet) { [sel.p, hSel].forEach(i => { if (CHARS[i] && !WAL.o.includes(i)) WAL.o.push(i); }); walSave(false); } // quem já jogava mantém os seus
 const GOD = () => sel.p === 'god';
@@ -1399,6 +1515,8 @@ const TRAITS = {
   rafa:    { grav: 0.26, flap: 5.9, windK: 1.8, hr: 10, t: 'Folha ao vento: cai como uma folha, mas o vento empurra-a muito mais.', sp: 'Outono: chuva de folhas a tapar-te a vista.' },
   paraiso: { magnet: 55, pipeCoin: 1, dance: 15, t: 'Penas de ouro: +1 moeda por torre. Aura de moedas. A cada 15 pontos dança 3 s e atravessa os livros.', sp: 'Deslumbre: arco-íris e pétalas a cobrir o ecrã.' },
   pegasus: { hr: 10, grav: 0.34, flap: 6.9, spd: 0.94, shield: 1, revive: 2, sonar: 1, nometeor: 1, magnet: 110, coinX: 2, pipeCoin: 2, dance: 12, gapPlus: 10, windK: 0.4, calm: 1.6, t: 'LENDA: escudo + 2 renascimentos, ignora meteoros, vê no escuro, íman enorme, moedas x2 (+2 por torre), vãos mais largos, voo suave e a cada 12 pontos dança e atravessa os livros.', sp: 'Relincho divino: arco-íris e estrelas a cobrir o ecrã.' },
+  anjo:    { hr: 10, grav: 0.32, flap: 6.7, spd: 0.94, shield: 1, revive: 3, sonar: 1, nometeor: 1, magnet: 120, coinX: 3, pipeCoin: 3, dance: 10, gapPlus: 14, windK: 0.3, calm: 1.8, t: 'ANJO: escudo + 3 renascimentos, ignora meteoros, vê no escuro, íman enorme, moedas x3 (+3 por torre), vãos bem mais largos, voo muito suave e a cada 10 pontos atravessa os livros.', sp: 'Coro celestial: raios de luz e penas a cobrir o ecrã.' },
+  diabo:   { hr: 10, grav: 0.42, flap: 7.8, spd: 1, shield: 1, revive: 2, nometeor: 1, smash: 3, magnet: 90, coinX: 4, pipeCoin: 4, dance: 14, windK: 0.5, t: 'DIABO: escudo + 2 renascimentos, ignora meteoros, esmaga 3 pilhas de livros, moedas x4 (+4 por torre), íman e a cada 14 pontos atravessa os livros.', sp: 'Chamas do inferno: fogo a atravessar o ecrã e brasas.' },
   arara:   { t: 'Papagaio: copia a característica de quem te atrapalha!', sp: 'Penas coloridas: chuva de penas e gritos.' },
   god:     { hr: 9, noscore: 1, t: 'MODO DEUS: invencível, sem pontos, sem moedas e fora do top. Usa ◀ ▶ para saltar de etapa.', sp: '—' },
   conde:   { calm: 2, t: 'Hipnose: quem te atrapalha faz tudo metade das vezes.', sp: 'Capa: cobre-te o ecrã por instantes.' }
@@ -1903,7 +2021,9 @@ const HELP = {
   jorge: { k: 'float', n: 'Pólen leve', l: ['Pólen leve! Voas mais leve!', 'Asas de borboleta para ti!', 'Flutua comigo!'] },
   rafa: { k: 'guide', n: 'Folha guia', l: ['Deixa-me levar-te, o vento ajuda!', 'A folha mostra o caminho!', 'Vai com o vento!'] },
   pegasus: { k: 'divine', n: 'Bênção divina', l: ['Bênção do Olimpo! Escudo, ímanes e calma!', 'Os deuses protegem-te!', 'Voa com a lenda!'] },
-  paraiso: { k: 'coin2', n: 'Penas de ouro', l: ['Penas de ouro: moedas a dobrar!', 'Brilha comigo, moedas em dobro!', 'Ouro a dobrar!'] }
+  paraiso: { k: 'coin2', n: 'Penas de ouro', l: ['Penas de ouro: moedas a dobrar!', 'Brilha comigo, moedas em dobro!', 'Ouro a dobrar!'] },
+  anjo: { k: 'divine', n: 'Graça divina', l: ['Graça divina! Escudo, ímanes e calma!', 'Os anjos protegem-te!', 'Voa com a luz!'] },
+  diabo: { k: 'coins', n: 'Pacto do diabo', l: ['Um pacto! Moedas para ti, alma para mim!', 'O inferno paga bem!', 'Moedas quentes, toma!'] }
 };
 const CHEER = {
   corvo: { fx: '🪶', l: ['Crá! Tu consegues!', 'Mais uma torre e és lenda!', 'Eu acredito em ti, amigo!'] },
@@ -1930,7 +2050,9 @@ const CHEER = {
   jorge: { fx: '🦋', l: ['Que voo tão bonito!', 'Leve como uma borboleta!', 'Continua a bater asas!'] },
   rafa: { fx: '🍂', l: ['Calma, é só outono!', 'Cai devagar, voa bem!', 'Estou contigo!'] },
   pegasus: { fx: '🪽', l: ['Voa como os deuses!', 'Que galope no céu!', 'Digno do Olimpo!'] },
-  paraiso: { fx: '🌴', l: ['Dança com o teu voo!', 'Que beleza de voo!', 'Aplausos!'] }
+  paraiso: { fx: '🌴', l: ['Dança com o teu voo!', 'Que beleza de voo!', 'Aplausos!'] },
+  anjo: { fx: '😇', l: ['Que o céu te guie!', 'Voa com as bênçãos!', 'Aleluia, que voo!'] },
+  diabo: { fx: '😈', l: ['Arde, mas voa!', 'O inferno está contigo!', 'Mwahaha, bom voo!'] }
 };
 const HLP = { next: Infinity, slowUntil: 0, magnetUntil: 0, coinXUntil: 0, floatUntil: 0, guideUntil: 0, widenN: 0, life: 0 };
 function helpReset(now) {
@@ -2554,7 +2676,7 @@ function drawWarning() {
 
 
 /* ====== ESPECIAL DE QUEM ATRAPALHA (distrações com aviso sonoro) ====== */
-const SP_SAY = { pegasus: 'Relinchoooo!', tucano: 'Fruta para todos!', picapau: 'Toc toc toc!', dodo: 'Abram alas para o dodo!', arara: 'Cá cá cá!', liberdade: 'Liberdade e fogo de artifício!', pato: 'QUACK QUACK!', mocho: 'Uuuh! Quem? Quem?', abutre: '*Cheira-me a carniça, caralho!', corvo: 'CRÁÁÁ!', ju: 'Sorri para a fotografia!', aguia: 'Apito final!', dragao: '*Toma lá fogo, carago!', fenix: 'Faíscas!', pomba: 'Paz e amor!', morcego: 'Iiiiih!', conde: 'A minha capa!', gaivota: 'Dá cá as moedas!', pelicano: 'Cuidado com o bico!', pavao: 'Admirem a cauda!', ptero: '*Rooaar, caralho!', ana: 'Zzzzzzzz!', jorge: 'Pólen para todos!', rafa: 'Chegou o outono!', paraiso: 'Admirem a dança!' };
+const SP_SAY = { anjo: 'Aleluiaaa!', diabo: '*Mwahaha, ardam todos, caralho!', pegasus: 'Relinchoooo!', tucano: 'Fruta para todos!', picapau: 'Toc toc toc!', dodo: 'Abram alas para o dodo!', arara: 'Cá cá cá!', liberdade: 'Liberdade e fogo de artifício!', pato: 'QUACK QUACK!', mocho: 'Uuuh! Quem? Quem?', abutre: '*Cheira-me a carniça, caralho!', corvo: 'CRÁÁÁ!', ju: 'Sorri para a fotografia!', aguia: 'Apito final!', dragao: '*Toma lá fogo, carago!', fenix: 'Faíscas!', pomba: 'Paz e amor!', morcego: 'Iiiiih!', conde: 'A minha capa!', gaivota: 'Dá cá as moedas!', pelicano: 'Cuidado com o bico!', pavao: 'Admirem a cauda!', ptero: '*Rooaar, caralho!', ana: 'Zzzzzzzz!', jorge: 'Pólen para todos!', rafa: 'Chegou o outono!', paraiso: 'Admirem a dança!' };
 FX.sp = []; FX.parts = [];
 function fireSpecial(now) {
   const id = sel.h; haptic('notificationOccurred', 'warning');
@@ -2589,6 +2711,8 @@ function fireSpecial(now) {
   if (id === 'rafa') { cry('rafa'); FX.sp.push({ k: 'leaves', start: now, until: now + 3000 }); }
   if (id === 'pegasus') { cry('pegasus'); FX.sp.push({ k: 'rainbow', start: now, until: now + 3000 }); FX.sp.push({ k: 'text', txt: '🐎 RELINCHO!', col: '#cfe0ff', start: now, until: now + 1100 }); }
   if (id === 'paraiso') { cry('paraiso'); FX.sp.push({ k: 'rainbow', start: now, until: now + 2800 }); }
+  if (id === 'anjo') { cry('anjo'); FX.sp.push({ k: 'rainbow', start: now, until: now + 3000 }); FX.sp.push({ k: 'text', txt: '😇 ALELUIA!', col: '#fff3b0', start: now, until: now + 1100 }); }
+  if (id === 'diabo') { cry('diabo'); FX.sp.push({ k: 'breath', start: now, until: now + 900, x: HD.fx, y: HD.fy }); FX.sp.push({ k: 'embers', start: now, until: now + 3000 }); FX.sp.push({ k: 'text', txt: '😈 MWAHAHA!', col: '#ff5a3a', start: now, until: now + 1100 }); }
   if (id === 'ptero') {
     cry('ptero'); for (let i = 0; i < 7; i++) setTimeout(() => { shake = Math.max(shake, 9); }, i * 200);
     FX.sp.push({ k: 'terror', start: now, until: now + 2600, b: Array.from({ length: 16 }, () => ({ x: 20 + Math.random() * 320, d: Math.random() * 0.5, c: PALETTE[(Math.random() * PALETTE.length) | 0], r: Math.random() * 6 })) });
@@ -3069,7 +3193,9 @@ const ATR = {
   fenix: { revive: 1 }, liberdade: { shield: 1 }, dodo: { end: 2, gr: 1.2 }, gaivota: { tail: 0.02 }, pelicano: { rk: 3 },
   pavao: { ge: 3 }, ptero: { gg: 0, ge: 2, pw: 1.1 }, ana: { ge: 4, gc: 1.2 }, jorge: { th: 1.8 },
   paraiso: { cx: 3, mg: 120, rk: 1, bn: 0.1, end: 1.5 },
-  pegasus: { pw: 1.15, dr: 0.7, ge: 3, gg: 0, cx: 4, mg: 160, rk: 3, rp: 1.35, bn: 0.12, end: 2.5, shield: 1, revive: 1, th: 1.6 }
+  pegasus: { pw: 1.15, dr: 0.7, ge: 3, gg: 0, cx: 4, mg: 160, rk: 3, rp: 1.35, bn: 0.12, end: 2.5, shield: 1, revive: 1, th: 1.6 },
+  anjo: { pw: 1.18, dr: 0.65, ge: 3.5, gg: 0, cx: 2, mg: 140, rk: 2, rp: 1.3, bn: 0.1, end: 3, shield: 1, revive: 2, th: 1.8 },
+  diabo: { pw: 1.25, dr: 0.7, ge: 2, gg: 0.1, cx: 5, mg: 130, rk: 4, rp: 1.6, bn: 0.15, end: 2, shield: 1, revive: 1, burn: 1, smash: 3, th: 1.4 }
 };
 const ATT = {
   corvo: 'Clássico equilibrado, sem bónus.', rafa: 'Folha levíssima: cai devagar, mas lança com menos força.', pomba: 'Planadora: +60% de energia de planar.',
@@ -3082,6 +3208,7 @@ const ATT = {
   ptero: 'Rei do céu: planar sem cair, +100% de energia e +10% de lançamento.', ana: 'Beija-flor: 4 vezes mais energia e quase não cai ao planar.',
   jorge: 'Borboleta: correntes de ar e balões com +80% de força.', pegasus: 'Lenda: escudo, renasce, +3 foguetes, íman, moedas x4, planar quase infinito, +15% de lançamento e prémio x2,5.', paraiso: 'Penas de ouro: moedas x3, íman, +1 foguete, ressalto e prémio +50%.'
 };
+Object.assign(ATT, { anjo: 'Anjo: escudo, renasce 2 vezes, íman, planar quase infinito, moedas x2 e prémio x3.', diabo: 'Diabo: fogo nos foguetes (+60%), queima torres, moedas x5, escudo, renasce e prémio x2.' });
 const aT = () => Object.assign({ pw: 1, gr: 1, dr: 1, ge: 1, gg: 0.25, gc: 2.2, bn: 0, rk: 0, rp: 1, mg: 0, cx: 1, end: 1, th: 1, ps: 1, tail: 0 }, ATR[AS.sel] || {});
 const aCost = k => Math.round(AUP[k].base * Math.pow(1.6, AS.u[k]));
 
