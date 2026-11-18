@@ -10,6 +10,12 @@ canvas{display:block;width:100%;height:100%}
 .hud{position:fixed;top:calc(10px + env(safe-area-inset-top));left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:0 12px;pointer-events:none;z-index:7}
 .hud button{pointer-events:auto;background:rgba(255,255,255,.08);border:1px solid rgba(160,220,255,.25);color:#dff3ff;border-radius:14px;height:38px;min-width:38px;padding:0 10px;font-size:16px;backdrop-filter:blur(6px)}
 .hud button.on{background:rgba(255,120,200,.22);border-color:rgba(255,150,220,.6)}
+.hud button.off{opacity:.45}
+#songs{position:fixed;top:calc(56px + env(safe-area-inset-top));right:10px;z-index:8;min-width:220px;max-width:80vw;background:rgba(10,16,40,.94);border:1px solid rgba(160,220,255,.3);border-radius:16px;padding:10px;backdrop-filter:blur(8px);box-shadow:0 8px 30px rgba(0,0,0,.5)}
+#songs.hidden{display:none}
+#songs b{display:block;font-size:13px;opacity:.8;margin:2px 6px 8px}
+#songs button{display:block;width:100%;text-align:left;background:none;border:0;color:#e8f1ff;font-size:15px;padding:10px 8px;border-radius:10px}
+#songs button.sel{background:rgba(255,120,200,.2)}
 .hud .mid{font-size:13px;letter-spacing:.06em;opacity:.85;text-align:center;text-shadow:0 0 8px rgba(120,200,255,.6)}
 .hud .mid b{font-size:18px;display:block;color:#ffd1f0}
 .hud .r{display:flex;gap:6px}
@@ -27,13 +33,14 @@ canvas{display:block;width:100%;height:100%}
 <div class="hud">
   <button id="bBack" aria-label="Sair">←</button>
   <div class="mid"><b id="nN">0</b>notas · fluxo <span id="nF">1</span>×</div>
-  <div class="r"><button id="bMus" aria-label="Música">🎵</button><button id="bAuto" aria-label="Piloto automático">🧘</button><button id="bMute" aria-label="Som">🔊</button></div>
+  <div class="r"><button id="bSong" aria-label="Escolher música">🎶</button><button id="bMusOn" aria-label="Música">🎵</button><button id="bSfx" aria-label="Efeitos">🔔</button><button id="bAuto" aria-label="Piloto automático">🧘</button></div>
 </div>
+<div id="songs" class="hidden"><b>🎶 Escolhe a música</b><div id="songList"></div></div>
 <div id="intro">
   <h1>CORVO ZEN</h1>
   <div class="sub">Voo lento, música calma.<br>Apanha as notas e deixa-te ir.<br><b>Aqui não se morre.</b></div>
   <div class="tap">TOCA PARA COMEÇAR</div>
-  <small>🧘 Piloto automático: o Corvo voa sozinho e tu só ouves.<br>🎵/🎛 troca entre a canção e a música gerada.<br>Usa auscultadores. 🎧</small>
+  <small>🧘 Piloto automático: o Corvo voa sozinho e tu só ouves.<br>🎶 escolhe a música · 🎵 liga/desliga a música · 🔔 liga/desliga os efeitos.<br>Usa auscultadores. 🎧</small>
 </div>
 <script>
 'use strict';
@@ -60,9 +67,19 @@ const CHORDS = [[57, 60, 64, 67, 71], [53, 57, 60, 64, 67], [48, 55, 59, 62, 64]
 const ROOTS = [45, 41, 48, 40];
 const PENTA_GEN = [69, 72, 74, 76, 79, 81, 84, 86, 88, 91];  // lá menor pentatónica (música gerada)
 const PENTA_MP3 = [65, 67, 70, 72, 74, 77, 79, 82, 84, 86];  // Fá sem terceira (F G Bb C D): encaixa no zen.mp3, em Fá
-let MUSMODE = ls('zen_mus') === 'gen' ? 'gen' : 'mp3', mus = null, musSrc = null, anl = null, anlBuf = null, bassAvg = 0, lastPulse = 0;
-const PENTA_NOW = () => MUSMODE === 'mp3' ? PENTA_MP3 : PENTA_GEN;
-let A = null, master, comp, rev, dly, dlyFb, crackle, muted = ls('zen_mute') === '1';
+// Para juntar outra cancao: poe o mp3 ao lado do index.html e acrescenta uma linha aqui
+// (escala = notas que soam por cima dela; para uma cancao em Fa usa a do Corvo Zen).
+const MUSICAS = [
+  { id: 'zen', nome: '🐦‍⬛ Corvo Zen (canção)', file: 'zen.mp3', escala: PENTA_MP3 },
+  { id: 'gen', nome: '🎛 Lo-fi gerada pelo jogo', gen: true, escala: PENTA_GEN },
+];
+let cancao = ls('zen_cancao') || MUSICAS[0].id;
+if (!MUSICAS.some(m => m.id === cancao)) cancao = MUSICAS[0].id;
+let musOn = ls('zen_musica') !== '0', sfxOn = ls('zen_sfx') !== '0', falhou = {};
+const musAtual = () => MUSICAS.find(m => m.id === cancao) || MUSICAS[0];
+let MUSMODE = musAtual().gen ? 'gen' : 'mp3', mus = null, musSrc = null, anl = null, anlBuf = null, bassAvg = 0, lastPulse = 0;
+const PENTA_NOW = () => musAtual().escala || PENTA_GEN;
+let A = null, master, comp, rev, dly, dlyFb, crackle, busM, busS, revS, dlyS;
 let step = 0, nextT = 0, bar = 0, beatPulse = 0, lastKick = -1, schedTimer = null;
 const kicks = [];
 
@@ -80,15 +97,22 @@ let NB = null;
 function audioInit() {
   if (A) { if (A.state === 'suspended') A.resume(); return; }
   A = new (window.AudioContext || window.webkitAudioContext)();
-  master = A.createGain(); master.gain.value = muted ? 0 : 0.9;
+  master = A.createGain(); master.gain.value = 0.9;
+  busM = A.createGain(); busM.gain.value = musOn ? 1 : 0; busM.connect(master);   // musica
+  busS = A.createGain(); busS.gain.value = sfxOn ? 1 : 0; busS.connect(master);   // efeitos
   comp = A.createDynamicsCompressor(); comp.threshold.value = -18; comp.ratio.value = 3;
   master.connect(comp); comp.connect(A.destination);
   rev = A.createConvolver(); rev.buffer = impulse(4.2, 2.6);
-  const revG = A.createGain(); revG.gain.value = 0.55; rev.connect(revG); revG.connect(master);
+  const revG = A.createGain(); revG.gain.value = 0.55; rev.connect(revG); revG.connect(busM);
+  revS = A.createConvolver(); revS.buffer = rev.buffer;
+  const revSG = A.createGain(); revSG.gain.value = 0.55; revS.connect(revSG); revSG.connect(busS);
   dly = A.createDelay(2); dly.delayTime.value = STEP * 3;       // colcheia com ponto
   dlyFb = A.createGain(); dlyFb.gain.value = 0.38;
   const dlf = A.createBiquadFilter(); dlf.type = 'lowpass'; dlf.frequency.value = 2200;
-  dly.connect(dlf); dlf.connect(dlyFb); dlyFb.connect(dly); dlf.connect(master);
+  dly.connect(dlf); dlf.connect(dlyFb); dlyFb.connect(dly); dlf.connect(busM);
+  dlyS = A.createDelay(2); dlyS.delayTime.value = STEP * 3;
+  const fbS = A.createGain(); fbS.gain.value = 0.38; const dlfS = A.createBiquadFilter(); dlfS.type = 'lowpass'; dlfS.frequency.value = 2200;
+  dlyS.connect(dlfS); dlfS.connect(fbS); fbS.connect(dlyS); dlfS.connect(busS);
   NB = noiseBuf(2);
   // vinil: estalidos suaves em ciclo
   const cb = A.createBuffer(1, A.sampleRate * 4, A.sampleRate), cd = cb.getChannelData(0);
@@ -96,33 +120,58 @@ function audioInit() {
   crackle = A.createBufferSource(); crackle.buffer = cb; crackle.loop = true;
   const cf = A.createBiquadFilter(); cf.type = 'lowpass'; cf.frequency.value = 3200;
   const cg = A.createGain(); cg.gain.value = 0.16;
-  crackle.connect(cf); cf.connect(cg); cg.connect(master); crackle.start();
-  musStart(MUSMODE);
+  crackle.connect(cf); cf.connect(cg); cg.connect(busM); crackle.start();
+  tocar();
 }
 function genOn() { if (schedTimer) return; nextT = A.currentTime + 0.12; step = 0; schedTimer = setInterval(schedule, 25); }
 function genOff() { clearInterval(schedTimer); schedTimer = null; }
 function mp3Setup() {
   if (mus) return true;
   try {
-    mus = new Audio('zen.mp3'); mus.loop = true; mus.preload = 'auto';
+    mus = new Audio(); mus.loop = true; mus.preload = 'auto';
     musSrc = A.createMediaElementSource(mus);
-    const g = A.createGain(); g.gain.value = 0.85; musSrc.connect(g); g.connect(master);
+    const g = A.createGain(); g.gain.value = 0.85; musSrc.connect(g); g.connect(busM);
     anl = A.createAnalyser(); anl.fftSize = 1024; anl.smoothingTimeConstant = 0.5; musSrc.connect(anl);
     anlBuf = new Uint8Array(anl.frequencyBinCount);
-    mus.addEventListener('error', () => { if (MUSMODE === 'mp3') musStart('gen', true); });
+    mus.addEventListener('error', () => { const m = musAtual(); if (!m.gen) { falhou[m.id] = 1; tocar(); } });
     return true;
   } catch (e) { return false; }
 }
-function musStart(m, falhou) {
-  MUSMODE = m; $('bMus').textContent = m === 'mp3' ? '🎵' : '🎛';
-  if (!falhou) ls('zen_mus', m);
-  if (m === 'mp3' && mp3Setup()) {
-    genOff();
-    const p = mus.play(); if (p && p.catch) p.catch(() => { if (mus.error) musStart('gen', true); });
-  } else {
-    if (mus) mus.pause();
-    MUSMODE = 'gen'; $('bMus').textContent = '🎛'; genOn();
-  }
+function tocar() {   // poe a tocar a cancao escolhida (ou para tudo se a musica estiver desligada)
+  if (!A) return;
+  let m = musAtual();
+  if (!m.gen && falhou[m.id]) m = MUSICAS.find(x => x.gen) || m;   // mp3 nao carregou: usa a gerada (sem mudar a escolha)
+  MUSMODE = m.gen ? 'gen' : 'mp3';
+  if (!musOn) { genOff(); if (mus) mus.pause(); return; }
+  if (m.gen) { if (mus) mus.pause(); genOn(); return; }
+  genOff();
+  if (!mp3Setup()) { falhou[m.id] = 1; return tocar(); }
+  if (mus.dataset.f !== m.file) { mus.src = m.file; mus.dataset.f = m.file; }
+  const p = mus.play(); if (p && p.catch) p.catch(() => { if (mus.error) { falhou[m.id] = 1; tocar(); } });
+}
+function setMusica(v) {
+  musOn = v; ls('zen_musica', v ? '1' : '0');
+  $('bMusOn').textContent = v ? '🎵' : '🔇'; $('bMusOn').classList.toggle('off', !v);
+  if (A) { busM.gain.setTargetAtTime(v ? 1 : 0, A.currentTime, 0.25); tocar(); }
+}
+function setSfx(v) {
+  sfxOn = v; ls('zen_sfx', v ? '1' : '0');
+  $('bSfx').textContent = v ? '🔔' : '🔕'; $('bSfx').classList.toggle('off', !v);
+  if (A) busS.gain.setTargetAtTime(v ? 1 : 0, A.currentTime, 0.1);
+}
+function escolher(id) {
+  cancao = id; ls('zen_cancao', id); delete falhou[id];
+  if (!musOn) setMusica(true); else tocar();
+  listaMusicas();
+}
+function listaMusicas() {
+  const L = $('songList'); L.innerHTML = '';
+  MUSICAS.forEach(m => {
+    const b = document.createElement('button');
+    b.textContent = (m.id === cancao ? '✓ ' : '   ') + m.nome; if (m.id === cancao) b.className = 'sel';
+    b.addEventListener('click', e => { e.stopPropagation(); audioInit(); escolher(m.id); setTimeout(() => $('songs').classList.add('hidden'), 250); });
+    L.appendChild(b);
+  });
 }
 function mp3Pulse() {   // lua e néon a pulsar com o baixo do mp3
   if (MUSMODE !== 'mp3' || !anl || !mus || mus.paused) return;
@@ -132,10 +181,10 @@ function mp3Pulse() {   // lua e néon a pulsar com o baixo do mp3
   const t = performance.now();
   if (v > bassAvg * 1.18 + 6 && t - lastPulse > 280) { beatPulse = 1; lastPulse = t; }
 }
-function out(node, dry, wet, echo) {
-  if (dry) { const g = A.createGain(); g.gain.value = dry; node.connect(g); g.connect(master); }
-  if (wet) { const g = A.createGain(); g.gain.value = wet; node.connect(g); g.connect(rev); }
-  if (echo) { const g = A.createGain(); g.gain.value = echo; node.connect(g); g.connect(dly); }
+function out(node, dry, wet, echo, sfx) {   // sfx=true: efeitos (bus proprio); senao: musica
+  if (dry) { const g = A.createGain(); g.gain.value = dry; node.connect(g); g.connect(sfx ? busS : busM); }
+  if (wet) { const g = A.createGain(); g.gain.value = wet; node.connect(g); g.connect(sfx ? revS : rev); }
+  if (echo) { const g = A.createGain(); g.gain.value = echo; node.connect(g); g.connect(sfx ? dlyS : dly); }
 }
 function pad(t, notes, dur) {
   const f = A.createBiquadFilter(); f.type = 'lowpass'; f.Q.value = 0.7;
@@ -188,37 +237,33 @@ function schedule() {
   }
 }
 function sNote(i) {
-  if (!A || muted) return;
-  const t = MUSMODE === 'gen' ? Math.max(A.currentTime + 0.01, nextQuant()) : A.currentTime + 0.01;
+  if (!A || !sfxOn) return;
+  const t = MUSMODE === 'gen' && schedTimer ? Math.max(A.currentTime + 0.01, nextQuant()) : A.currentTime + 0.01;
   const P5 = PENTA_NOW(), n = P5[i % P5.length];
   const o = A.createOscillator(); o.type = 'triangle'; o.frequency.value = midi(n);
   const o2 = A.createOscillator(); o2.type = 'sine'; o2.frequency.value = midi(n + 12);
   const g = A.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.16, t + 0.005); g.gain.exponentialRampToValueAtTime(0.001, t + 1.2);
   const g2 = A.createGain(); g2.gain.value = 0.25; o2.connect(g2); g2.connect(g);
-  o.connect(g); out(g, 0.6, 0.6, 0.55); o.start(t); o2.start(t); o.stop(t + 1.3); o2.stop(t + 1.3);
+  o.connect(g); out(g, 0.6, 0.6, 0.55, true); o.start(t); o2.start(t); o.stop(t + 1.3); o2.stop(t + 1.3);
 }
 function nextQuant() { const e = STEP * 2, base = nextT - STEP * (step % 2); let t = base; while (t < A.currentTime + 0.015) t += e; return t; }
 function sChime() {
-  if (!A || muted) return; const t = A.currentTime + 0.02;
+  if (!A || !sfxOn) return; const t = A.currentTime + 0.02;
   (MUSMODE === 'mp3' ? [89, 96] : [88, 95]).forEach((n, k) => { const o = A.createOscillator(); o.type = 'sine'; o.frequency.value = midi(n);
     const g = A.createGain(); g.gain.setValueAtTime(0, t + k * 0.09); g.gain.linearRampToValueAtTime(0.05, t + k * 0.09 + 0.01); g.gain.exponentialRampToValueAtTime(0.001, t + k * 0.09 + 2.5);
-    o.connect(g); out(g, 0.3, 1); o.start(t + k * 0.09); o.stop(t + 3); });
+    o.connect(g); out(g, 0.3, 1, 0, true); o.start(t + k * 0.09); o.stop(t + 3); });
 }
 function sSoft() {
-  if (!A || muted) return; const t = A.currentTime;
+  if (!A || !sfxOn) return; const t = A.currentTime;
   const s = A.createBufferSource(); s.buffer = NB;
   const f = A.createBiquadFilter(); f.type = 'lowpass'; f.frequency.setValueAtTime(1200, t); f.frequency.exponentialRampToValueAtTime(180, t + 0.6);
   const g = A.createGain(); g.gain.setValueAtTime(0.18, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.7);
-  s.connect(f); f.connect(g); out(g, 1, 0.5); s.start(t); s.stop(t + 0.8);
-}
-function setMute(m) {
-  muted = m; ls('zen_mute', m ? '1' : '0'); $('bMute').textContent = m ? '🔇' : '🔊';
-  if (A) master.gain.setTargetAtTime(m ? 0 : 0.9, A.currentTime, 0.3);
+  s.connect(f); f.connect(g); out(g, 1, 0.5, 0, true); s.start(t); s.stop(t + 0.8);
 }
 document.addEventListener('visibilitychange', () => {
   if (!A) return;
   if (document.hidden) { A.suspend(); if (mus) mus.pause(); }
-  else { A.resume(); if (MUSMODE === 'mp3' && mus) { const p = mus.play(); if (p && p.catch) p.catch(() => {}); } }
+  else { A.resume(); if (musOn && MUSMODE === 'mp3' && mus) { const p = mus.play(); if (p && p.catch) p.catch(() => {}); } }
 });
 
 /* ================= MUNDO ================= */
@@ -461,8 +506,11 @@ function begin() {
 cv.addEventListener('pointerdown', e => { e.preventDefault(); if (!started) begin(); else if (!auto) flap(); }, { passive: false });
 $('intro').addEventListener('pointerdown', e => { e.preventDefault(); begin(); }, { passive: false });
 addEventListener('keydown', e => { if (e.code === 'Space' || e.code === 'ArrowUp') { e.preventDefault(); if (!started) begin(); else if (!auto) flap(); } });
-$('bMute').addEventListener('click', e => { e.stopPropagation(); audioInit(); setMute(!muted); });
-$('bMus').addEventListener('click', e => { e.stopPropagation(); if (!A) { MUSMODE = MUSMODE === 'mp3' ? 'gen' : 'mp3'; ls('zen_mus', MUSMODE); $('bMus').textContent = MUSMODE === 'mp3' ? '🎵' : '🎛'; return; } musStart(MUSMODE === 'mp3' ? 'gen' : 'mp3'); });
+$('bSfx').addEventListener('click', e => { e.stopPropagation(); audioInit(); setSfx(!sfxOn); });
+$('bMusOn').addEventListener('click', e => { e.stopPropagation(); audioInit(); setMusica(!musOn); });
+$('bSong').addEventListener('click', e => { e.stopPropagation(); listaMusicas(); $('songs').classList.toggle('hidden'); });
+$('songs').addEventListener('pointerdown', e => e.stopPropagation());
+document.addEventListener('pointerdown', e => { if (!$('songs').contains(e.target) && e.target !== $('bSong')) $('songs').classList.add('hidden'); });
 $('bAuto').addEventListener('click', e => { e.stopPropagation(); auto = !auto; $('bAuto').classList.toggle('on', auto); if (!started) begin(); });
 function sendCoins() {
   const c = Math.min(200, Math.floor(sess / 15)) - coinsSent;
@@ -473,8 +521,8 @@ $('bBack').addEventListener('click', e => {
   if (A) { try { master.gain.setTargetAtTime(0, A.currentTime, 0.15); } catch (e) {} setTimeout(() => { try { A.close(); } catch (e) {} }, 400); }
   if (IN_FRAME) { try { window.parent.postMessage({ zen: 'exit' }, '*'); } catch (e) {} } else history.back();
 });
-setMute(muted);
-$('bMus').textContent = MUSMODE === 'mp3' ? '🎵' : '🎛';
+setMusica(musOn);
+setSfx(sfxOn);
 reset();
 requestAnimationFrame(frame);
 </script>
