@@ -104,6 +104,7 @@
     <button class="gbtn" id="m_atira"><span class="ge">🚀</span><span><b>Atira o Corvo</b><small>Lança, planeia, usa foguetes, molas e balões · melhorias</small></span></button>
     <button class="gbtn" id="m_bib"><span class="ge">📚</span><span><b>Bibliotecas em Guerra</b><small>Duelo de artilharia · o Corvo defende a biblioteca · ganha moedas</small></span></button>
     <button class="gbtn" id="m_herois"><span class="ge">🦸</span><span><b>Heróis de Papel</b><small>Equipa de heróis dos livros contra traças e censores · 6 bibliotecas</small></span></button>
+    <button class="gbtn" id="m_zen"><span class="ge">🌙</span><span><b>Corvo Zen</b><small>Voo lento e música chillout · apanha notas · aqui não se morre</small></span></button>
     <div class="picks small" id="m_info"></div>
   </div>
   <div id="ready" class="panel">
@@ -3141,7 +3142,7 @@ function draw() {
 let last = performance.now();
 function frame(now) {
   const dt = Math.min((now - last) / 16.667, 2.5); last = now;
-  if (GAME === 'flappy') { update(dt); draw(); } else if (GAME === 'atira') { atUpdate(dt); atDraw(); } else if (GAME === 'bib' || GAME === 'herois') { /* jogo noutro iframe */ } else menuDraw(dt);
+  if (GAME === 'flappy') { update(dt); draw(); } else if (GAME === 'atira') { atUpdate(dt); atDraw(); } else if (GAME === 'bib' || GAME === 'herois' || GAME === 'zen') { /* jogo noutro iframe */ } else menuDraw(dt);
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
@@ -3662,6 +3663,18 @@ window.addEventListener('message', e => {
   if (d.herois === 'coins' && d.n > 0 && d.n <= 5000) { WAL.c += d.n | 0; walSave(true); } else if (d.herois === 'exit') closeHerois();
 });
 document.getElementById('m_herois').addEventListener('click', startHerois);
+/* ====== CORVO ZEN (zen.html ao lado do index.html, num iframe) ====== ZEN_OK */
+let zenFrame = null;
+function startZen() {
+  menuEl.classList.add('hidden'); homeBtn.classList.add('hidden'); GAME = 'zen'; bibWrap.classList.remove('hidden');
+  zenFrame = document.createElement('iframe'); zenFrame.setAttribute('allow', 'autoplay'); zenFrame.src = 'zen.html?v=' + Date.now(); bibWrap.appendChild(zenFrame);
+}
+function closeZen() { bibWrap.classList.add('hidden'); if (zenFrame) { zenFrame.remove(); zenFrame = null; } openMenu(); }
+window.addEventListener('message', e => {
+  const d = e.data; if (!d || !d.zen || !zenFrame || e.source !== zenFrame.contentWindow) return;
+  if (d.zen === 'coins' && d.n > 0 && d.n <= 200) { WAL.c += d.n | 0; walSave(true); } else if (d.zen === 'exit') closeZen();
+});
+document.getElementById('m_zen').addEventListener('click', startZen);
 homeBtn.addEventListener('click', openMenu);
 openMenu();
 
